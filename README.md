@@ -25,9 +25,6 @@ The playing skill needs the `steel` command line on the path:
 curl -fsSL https://steelti.de/cli.sh | sh
 ```
 
-`steel` also carries its own copy of that skill: `steel skill --install` writes it
-into `./.claude/skills` without this repository.
-
 Any other agent that reads `SKILL.md` folders (the
 [Agent Skills](https://agentskills.io) layout) can take a folder from `skills/`
 and put it wherever it loads skills from.
@@ -52,12 +49,11 @@ skills/steel-tide-mods-guideline/
 
 ## Where they come from
 
-Both skills are kept with the game's source, which is not public, and copied here
-when they change. `steel-tide-cli` is the same skill the `steel` binary embeds.
-`steel-tide-mods-guideline` is generated from the mod format itself, together with
-the registry's validator, so the brief and the checker never disagree. A pull
-request here would be overwritten by the next copy; to suggest a change, open an
-issue.
+`steel-tide-cli` is written here: this repository is its source, and a pull
+request to it is welcome. `steel-tide-mods-guideline` is generated from the mod
+format itself, together with the registry's validator, so the brief and the
+checker never disagree; a change to it made here would be overwritten by the next
+generation, so open an issue for it instead.
 
 ## License
 

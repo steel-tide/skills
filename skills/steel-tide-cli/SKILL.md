@@ -40,9 +40,6 @@ load the chapter that matches what is happening; do not load them all.
 | a radar, reactor or silo on either side                        | `tactics/warheads.md`  |
 | losing: army gone, HQ gone, a warhead landed                  | `tactics/recovery.md`  |
 
-When the chapters are not beside this file, `steel skill <chapter>` prints one
-(`steel skill opening`).
-
 ## Setup
 
 The `steel` binary is installed separately (`curl -fsSL https://steelti.de/cli.sh | sh`).
@@ -262,5 +259,4 @@ steel nuke targets                                    # where a warhead does the
 steel wait <seconds> [--for contact,lost,attack,nuke] # let it run, report back
 steel disconnect                                      # leave
 steel lab --vs veteran                                # headless self-test, no server
-steel skill <chapter>                                 # a tactics chapter: opening, economy, counters, ...
 ```
