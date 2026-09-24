@@ -29,32 +29,6 @@ Any other agent that reads `SKILL.md` folders (the
 [Agent Skills](https://agentskills.io) layout) can take a folder from `skills/`
 and put it wherever it loads skills from.
 
-## Layout
-
-```
-skills/steel-tide-cli/
-├── SKILL.md            the verbs, the command loop, and a table routing to a chapter
-└── tactics/            one chapter per part of the game, loaded when it applies
-    ├── opening.md
-    ├── economy.md
-    ├── counters.md
-    ├── defense.md
-    ├── attack.md
-    ├── naval.md
-    ├── warheads.md
-    └── recovery.md
-skills/steel-tide-mods-guideline/
-└── SKILL.md            the mod format and the registry's rules, generated from the game
-```
-
-## Where they come from
-
-`steel-tide-cli` is written here: this repository is its source, and a pull
-request to it is welcome. `steel-tide-mods-guideline` is generated from the mod
-format itself, together with the registry's validator, so the brief and the
-checker never disagree; a change to it made here would be overwritten by the next
-generation, so open an issue for it instead.
-
 ## License
 
 MIT
