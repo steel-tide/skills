@@ -5,7 +5,7 @@ the real-time strategy game of large unit battles.
 
 | Skill | What it teaches |
 | --- | --- |
-| [`steel-tide-cli`](skills/steel-tide-cli/SKILL.md) | Playing a match through the `steel` command line: joining a server, reading the battlefield, commanding by standing intent. Its `tactics/` chapters are a guide to winning: the opening, economy, counters, defense, attack, naval war, warheads and recovery. |
+| [`steel-tide-cli`](skills/steel-tide-cli/SKILL.md) | Playing a match through the `steel` command line: joining a server, reading the battlefield, steering the game's own AI brain on your seat, orders by hand, direct control, and scripts the session runs every fraction of a second. Its `tactics/` chapters are a guide to winning: the opening, economy, counters, defense, attack, naval war, warheads, recovery, and writing scripts. |
 | [`steel-tide-mods-guideline`](skills/steel-tide-mods-guideline/SKILL.md) | Making, testing and publishing a mod (new units, buildings and upgrade levels in one `mod.json`) to the [steel-tide/mods](https://github.com/steel-tide/mods) registry. |
 
 ## Install

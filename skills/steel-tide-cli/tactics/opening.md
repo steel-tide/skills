@@ -1,62 +1,69 @@
 # Opening: the first ten minutes
 
-## Before the first order
+## Before the whistle
 
-1. **Clear what the last match left.** The plan, the mixes and the forces live in
-   the session, not the match, so a new match starts with the old goals. First
-   commands: `steel plan reset`, then `steel force <name> disband` for each force
-   `steel forces` still lists.
-2. **Read the reach line.** `steel brief` prints `reach  the enemy is across
-   water` when no land route exists. Across water the war is ships, aircraft and
-   lifts (see `naval.md`); on land it is tanks.
-3. **Learn the ground.** `steel map` for the shape, `steel deposits` for the ore
-   and its `reach`. The deposits between you and the enemy are the ones that will
-   be fought over; the ones behind your base are safe income.
+1. **Check the brain will take the seat.** `steel status` says `brain  takes the
+   seat when the match starts` in the lobby. A doctrine chosen now is the one it
+   opens with (`steel auto --doctrine armored`); leave it on `auto` when you do not
+   yet know the map.
+2. **Read the reach line** once the match is on. `steel brief` prints `reach  the
+   enemy is across water` when no land route exists. Across water the war is
+   ships, aircraft and lifts (see `naval.md`); on land it is tanks.
+3. **Learn the ground.** `steel map` for the shape, `steel deposits` for the ore.
+   The deposits between you and the enemy are the ones that will be fought over.
 
-## Army before greed on land
+## Let the brain open
 
-The first real attack on a land map tends to come at 10 to 12 minutes, as a
-body of 8 to 10 units, and in a match with several enemies it can come from two
-sides at once. An opening that spends everything on extractors, upgrades and
-engineers meets it with a few hundred metal of army and loses the base.
+The brain's opening is the veteran's, and it is strong: most of the free ore
+taken in the first two or three minutes, the first factory at about three,
+extractor upgrades from the fourth, the War Lab and a doctrine by the fifth,
+Deep-Core extractors from the eighth, an army from the seventh and waves after.
+Do not fight it for the economy. Spend your attention on what it cannot see.
 
-Aim for these by the clock:
+## What it cannot do: see
 
-| By    | Have                                                                                 |
-| ----- | ------------------------------------------------------------------------------------ |
-| 3:00  | 4 extractors, a factory, 2 MG turrets toward the enemy                                |
-| 6:30  | the factory at level 2 (`keep factory2 1 --save`)                                     |
-| 8:00  | about 2,000 metal of army at home (battle tanks, a tank destroyer or two, 2 flak), cannon turrets at the front |
-| 10:00 | a force posted where the first attack will land; only now the extractor upgrades      |
+A Veteran sees the whole map, and every other AI and your brain see what their
+side sees. Against a Veteran that is the gap, and these close it (against the
+others they are simply good play):
 
-A build order that does this:
+- **Find the enemy by minute five.** The brain sends a scout to every start it has
+  not seen, but a scout dies. `steel brief`'s `doing` line says `no enemy known
+  yet: scouting` until it finds a building. If it still says so at 4:00, send a
+  cheap unit yourself (`steel move <id> <their start>`), and give the brain a
+  `--target` when you know where they are.
+- **A radar early.** `steel auto --reserve 400`, then `steel build radar --near @hq`
+  (and `steel auto --reserve 0` once it is laid) by minute five or six, on the
+  side facing the enemy. It lifts the fog 24 tiles round it, through night and
+  rain: every turret and gun inside it then fires at its full reach at things
+  it could never see for itself, and the brain's memory fills with what it shows.
+  The brain would build one near minute seven; earlier pays.
+- **Artillery you cannot see.** A howitzer reaches 11 tiles and an MLRS 13 —
+  past the sight of most of what they shoot at, and a Veteran's guns fire at
+  whatever they reach, seen or not. Units and buildings dying with nothing in
+  sight means artillery, and the loss line names the gun (`lost mbt x3 to mlrs
+  x2`): look along the line to the enemy for open ground or water within 13
+  tiles, get vision there (radar, a fast unit), and send tanks into it by hand.
+  `--favour arty=2` gives you counter-battery, and a script can pull a group
+  out from under the shells in the second they land (`scripts.md`).
+- **Know what they build.** `steel enemies` lists what you have seen. An airbase
+  or helicopters: `--favour flak=2,sam=2` and AA turrets. A radar plus a reactor:
+  warheads are coming (`warheads.md`), so SAM sites now.
 
-```bash
-steel plan reset
-steel expand <near deposit>          # one per safe deposit, by id
-steel keep factory 1
-steel keep mgturret 2 --front
-steel keep factory2 1 --save
-steel keep cannonturret 2 --front --then
-steel mix factory mbt=3 td=1 flak=0.5:3 arty=1:6
-steel force main --size 10 defend <front x,y> --radius 15
-steel plan set engineers=4
-```
+## Timings to check
 
-- **Three or four engineers.** Each one is 200 metal of no army.
-- **Upgrade extractors once the base is safe**, not before (see `economy.md`).
+| By    | Check                                                                                   |
+| ----- | --------------------------------------------------------------------------------------- |
+| 3:00  | four or more extractors, a factory going up; the scout on its way                       |
+| 5:00  | the enemy's base found; the War Lab up and a doctrine chosen (`steel tech`)              |
+| 6:00  | a radar standing on the enemy's side                                                    |
+| 8:00  | an army at home worth the enemy's first wave; turrets on the approach it will come by   |
+| 10:00 | Deep-Core extractors rising; you know their army's mix and have steered the answer      |
+
+A check that fails is yours to fix by hand: a `build`, a `produce`, a `move`.
 
 ## Across water the clock is slower
 
-When the enemy is across water, attacks arrive later and in smaller lifts, so an
-economy opening pays: ten extractors and +1,500 metal a minute by minute 9 is
-reachable, with engineer boats claiming the islets. The autopilot's island plan
-(naval yard and airbase first) is a sound start; add coastal cannons and SAM
-sites early, because what comes is ships, aircraft and warheads.
-
-## First scouting
-
-`steel scout on` from the start; it sends a cheap drone or buggy. By minute 6 to
-8 you want to know where the enemy base is and what it builds. Read `steel
-enemies` and turn it into a `mix` (see `counters.md`). A radar, reactor or silo
-in that list means warheads are coming: start `warheads.md` now.
+When the enemy is across water, attacks arrive later and in smaller lifts, and the
+brain plays the island plan (a navy yard and an airbase first, engineer boats for
+the islets). Add coastal cannons and SAM sites early, because what comes is ships,
+aircraft and warheads.

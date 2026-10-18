@@ -3,10 +3,12 @@ name: steel-tide-cli
 description: >-
   Play Steel Tide, a real-time strategy game, through the `steel` command line —
   as the commander of one faction on a dedicated server. Use this whenever asked
-  to play, join, or command a Steel Tide match, or to run the `steel` CLI. You set
-  the strategy (economy, production, forces, attacks); an autopilot fights the
-  battle. Covers connecting, reading the battlefield, and commanding by standing
-  intent at your own pace.
+  to play, join, or command a Steel Tide match, or to run the `steel` CLI. The
+  game's own AI brain plays your seat second by second under your fog; you
+  command above it — steer it, take any unit, building or decision into your
+  own hands, or turn it off and play by hand and by scripts of your own that
+  the session runs every fraction of a second. Covers connecting, reading the
+  battlefield, steering the brain, orders by hand, direct control and scripts.
 license: MIT
 ---
 
@@ -14,31 +16,53 @@ license: MIT
 
 Steel Tide is a real-time strategy game about large unit battles. `steel` is its
 command line: it joins a dedicated server exactly as the browser game does, and
-lets you command one faction. You do **not** micro-manage units. You make the
-macro decisions a human commander makes — what to build, what to produce, where
-to attack — and a built-in autopilot carries them out every second: it runs the
-economy, expands, defends the base, and moves your armies in formation.
+lets you command one faction.
 
-This matters because you cannot act in real time: a match runs at 30 ticks a
-second and does not pause for you. So everything you command is a **standing
-intent** that code re-resolves continuously. A decision that lands ten seconds
-late is still carried out correctly, and the seat is never idle while you think.
-Command in bursts, then let time pass with `steel wait`.
+A match runs at 30 ticks a second and does not pause for you, so you are never
+the only controller of your seat. There are three, on the same game:
 
-This file is the verbs and the loop. How to win with them is in `tactics/`, one
-chapter per part of the game. Read `tactics/opening.md` before every match, then
-load the chapter that matches what is happening; do not load them all.
+- **The brain** plays every second. It is the game's own AI — the veteran's build
+  order, economy, tech, production, defence and attack waves, line for line —
+  run by the server for your seat. It takes the seat when the match starts.
+- **You** command above it. You steer it (`steel auto`), and you give any order
+  by hand whenever you judge better than it does. An order you give a unit takes
+  that unit out of the brain's hands until you give it back (`steel attach`).
+  Buildings you lay, units you queue and research you start are counted by the
+  brain as its own.
+- **Your scripts** play at the brain's speed with your judgement: code you
+  write, run by the session every fraction of a second against what your seat
+  sees (`steel script`). A rule for one kind of unit, a department taken from
+  the brain, or with the brain off (`steel direct`) the whole seat.
+
+The built-in AI comes as four personas. Relaxed, Standard and **Seasoned** fight
+under the fog exactly as you do; Seasoned plays the Veteran's numbers, and it is
+what your brain plays as, so against Seasoned your seat plays a mirror. The
+**Veteran** alone sees through the fog of war, and its guns fire at whatever
+they reach, seen or not. So your brain alone against a Veteran loses more often
+than it wins; what wins is you. Your edge is judgement the brain
+does not have: finding out what the enemy is doing and answering it — scouting, a
+radar, the right counters, where and when to strike, SAM sites before the
+warheads come, not standing in the reach of artillery you cannot see. Look,
+decide, steer, and step in by hand where it matters.
+
+This file is the verbs and the loop. How to win is in `tactics/`, one chapter per
+part of the game. Read `tactics/opening.md` before every match, then load the
+chapter that matches what is happening; do not load them all.
 
 | When                                                         | Load                   |
 | ------------------------------------------------------------ | ---------------------- |
-| a match is starting: reset, read the map, build order, timings | `tactics/opening.md`   |
-| income, expansions, upgrades, a goal or line not spending     | `tactics/economy.md`   |
-| the enemy fields something new: what beats it                 | `tactics/counters.md`  |
-| the base is threatened or under attack                        | `tactics/defense.md`   |
-| planning or running an offensive                              | `tactics/attack.md`    |
-| the enemy is across water (`reach` says so)                    | `tactics/naval.md`     |
-| a radar, reactor or silo on either side                        | `tactics/warheads.md`  |
-| losing: army gone, HQ gone, a warhead landed                  | `tactics/recovery.md`  |
+| a match is starting: the brain, the map, your first calls    | `tactics/opening.md`   |
+| income, expansions, upgrades, the War Lab                    | `tactics/economy.md`   |
+| the enemy fields something new: what beats it                | `tactics/counters.md`  |
+| the base is threatened or under attack                       | `tactics/defense.md`   |
+| planning or running an offensive                             | `tactics/attack.md`    |
+| the enemy is across water (`reach` says so)                  | `tactics/naval.md`     |
+| a radar, reactor or silo on either side                      | `tactics/warheads.md`  |
+| losing: army gone, HQ gone, a warhead landed                 | `tactics/recovery.md`  |
+| something must happen faster than your turns: write a script  | `tactics/scripts.md`   |
+
+Some chapters still name the verbs of the CLI's older autopilot (`keep`, `mix`,
+`force`); *Legacy* at the end says what each is under the brain.
 
 ## Setup
 
@@ -84,157 +108,181 @@ If no host is connected, the seated player who has been in the room longest is
 the **acting host** and may do the same — `steel status` says `(acting host)`
 beside the server when that is you. Then `steel lobby` to see the seats, close
 or fill the empty ones (`steel lobby slot <i> ai:standard` or `closed`), and
-`steel start` once everyone seated is ready. The console and the server's save
-stay with the host key.
+`steel start` once everyone seated is ready.
 
-A server may require mods (units and buildings added by players). `steel` handles
-that by itself: refused at the door, it fetches each required mod from the public
-registry, applies it and connects again, so `brief`, `show` and your orders know the
-mod's units by their ids like any other. If the connect fails saying a mod could
-not be got, the server is on a version the registry no longer serves; tell the user
-the host has to update it. (`steel defs`, which runs outside the session, lists the
-game's own units only.)
+The host can set the unit cap with `steel lobby set --pop 300`: 50 to 300 in
+steps of 10, with 100 as the default.
 
-No server to hand? Judge the autopilot headless against the built-in AI, which
-needs nothing else:
+A server may require mods; `steel` fetches them from the public registry by
+itself. If the connect fails saying a mod could not be got, the host has to
+update the server.
 
-```bash
-steel lab --vs veteran
-```
+You can steer the brain before the match starts (`steel auto --doctrine armored`
+in the lobby): it takes the seat with that steer at the whistle.
 
 ## The command loop
 
 1. **Look.** `steel brief` is the whole picture on one screen: economy, base,
-   your army and forces, the enemy, deposits, recent events, and your standing
-   intents. Drill in with `steel enemies`, `steel deposits`, `steel map`,
-   `steel ops`, `steel defs <unit>`.
-2. **Decide and command.** Set standing intents (below). Each prints what it did,
-   or why it was refused.
-3. **Wait.** `steel wait 45 --for contact,lost` lets the match run (in game-time
-   seconds) and returns early when a force makes contact, you lose something, or
-   the match ends. Its last line is your economy now. This is your main source of
-   news — you usually do not need another `brief` until something changes.
-   Other kinds worth waiting on: `attack` (the base is hit), `destroyed` (an
-   enemy building gone or a unit killed in sight), `nuke`. A line that repeats
-   is folded into one with a count.
-4. Repeat, adapting as the enemy reveals itself.
+   army, the enemy you know of, deposits, recent events, and what the brain is
+   doing (the `brain` and `doing` lines: its doctrine, its offensive or its next
+   push, its objective, how many enemy buildings it knows). A loss names what
+   killed it (`lost mbt x3 at 40,30 to mlrs x2`), even when the killer is out of
+   sight: a gun you cannot see is still named. Drill in with
+   `steel enemies`, `steel deposits`, `steel map`, `steel tech`, `steel defs <unit>`.
+2. **Decide.** Is the brain doing what the situation needs? Most of the time it
+   is. When it is not — it cannot see the artillery shelling the base, it is
+   building tanks against an air force, its offensive is going at the strong end
+   of the enemy's base — steer it, or do the thing yourself.
+3. **Steer or act.** `steel auto` changes what the brain does from its next
+   second; a hand order does one thing now (below).
+4. **Wait.** `steel wait 45 --for contact,lost,attack` lets the match run (in
+   game-time seconds) and returns early when something happens. Its last line is
+   your economy now. This is your main source of news.
+5. Repeat, adapting as the enemy reveals itself.
 
-## Commands you give
+## Steering the brain: `steel auto`
 
-These are standing intents the autopilot carries out. Run `steel help <verb>` for
-options.
+Every flag changes one thing and keeps the rest. `steel auto` alone shows what
+the brain runs, what it is doing, and how many units you hold by hand.
 
-- `steel plan set reserve=80 engineers=3 retreatAt=0.4` — the standing policy.
-  `steel plan` prints it with every build goal numbered and what each is doing.
-- `steel keep extractor 8` / `steel keep cannonturret 2 --front` — buildings to
-  keep standing, worked in list order, rebuilt when lost. Placement is the
-  autopilot's problem. One rule: a goal is a building plus a place (base,
-  `--front`, `--rear`, or an `--at x,y` tile).
-  - `keep B n` sets the final count of B there: its last step becomes n, and
-    earlier steps of it are capped at n. `keep` prints what it changed.
-  - `keep B n --then` adds a later step instead, for a build order:
-    `keep extractor 4`, `keep factory 1`, `keep extractor 7 --then`.
-  - `keep B 0` removes B's goals: at that place if you name one, everywhere if
-    you do not. `--first` and `--before <step|building>` reorder.
-  - `--save` makes a goal save up: while it is the next saving goal to buy, its
-    price is held back from production and from every goal after it. Without
-    it, a cheap goal goes ahead while a dear one waits for metal.
-  - An upgrade level (`extractor2`, `factory3`, `samsite`) keeps that many
-    standing at that level or above, building the base building first when
-    short. A warhead (`keep warhead 2`, `keep emp 1`) keeps that many in the
-    magazines and always saves for them.
-  - A goal whose tech is missing gets the missing buildings put in front of it
-    (a silo needs a radar and a reactor); `steel plan` shows them as `+` steps.
-- `steel mix factory mbt=3 flak=1 arty=1` — what a production line makes, by
-  weight; it never idles while metal lasts. Lines: `factory`, `airbase`, `navyard`.
-  `arty=1.5:8` caps artillery at 8 standing and queued, so one line cannot fill
-  the unit cap. The reply says what each line can make of the mix now and what
-  waits on an upgrade (`mbt needs factory2`) or tech; when half a line's mix
-  waits on its next level, the plan raises the line itself.
-- `steel expand <deposit>` — claim a metal deposit. The builder is whoever can
-  get there: an engineer on the same ground, an engineer boat on the water that
-  washes it (a navy yard builds one when needed), or an engineer flown over by a
-  transport. `steel deposits` lists them by id with a `reach` column.
-- `steel force <name> --size 14 --mix mbt,flak,arty attack auto` — an army group
-  that gathers to size, advances as one body, engages, retreats when it is losing,
-  refills, and attacks again. `attack auto` takes the nearest known enemy; give
-  `x,y` or `#id` to name a target, and a building named that way is taken from
-  wherever each unit's guns reach it (ships from the water in range). With no
-  `--mix` a force takes what can reach and hit the target: guns that cannot hit
-  the ground (flak, fighters, missile boats) ride along as escorts, one to every
-  four; ground units across water are carried over in transports when there are
-  any (`plan set lifts=on`, the default). Also `defend <x,y>` (answers anything
-  inside the post, engineers and blueprints included, each threat with the guns
-  that can hit it), `harass` (raid soft targets, flee from guns), `idle`,
-  `disband`. Units no force has room for wait at home as the reserve, which
-  answers attacks on the base; `steel forces` shows it.
-- `steel scout on` — keep a cheap scout (a drone or a buggy, never a dear unit)
-  revealing the map. It rests after each loss and keeps clear of where the last
-  one fell.
+- `--run economy,research,production,army,nukes` — the departments it runs (or
+  `all`). A department left out is yours: the brain neither spends on it nor
+  saves for it. Leave out `army` to fight every battle yourself; leave out
+  `economy` to lay every building yourself.
+- `--doctrine combined|armored|airpower|naval|turtle|blitz|auto` — the
+  personality it fights by: which lines it feeds, how many turrets, how early it
+  attacks, how it techs. `auto` lets it choose.
+- `--favour mbt=2,flak=0,sam=3` — a weight on what it builds, times its own: 2 is
+  twice as often, 0 never, 1 back to normal; `clear` drops them all. A unit
+  favoured above 1 is always built at least a little, even if the brain has not
+  seen what calls for it, and one it would never build takes your figure as its
+  weight, where a line of yours can make it. This is how you answer what you have seen: `counters.md`
+  says what beats what.
+- `--posture push|hold|auto` — `push` sends whatever stands ready at its
+  objective now and keeps sending; `hold` never marches (it still defends);
+  `auto` is its own clock.
+- `--target x,y` — what its offensive marches on, in place of the nearest enemy
+  building it knows (`none` to clear). Point it at the enemy's weak side, their
+  outlying extractors, the silo.
+- `--reserve 400` — metal it leaves on the balance for your own orders. The brain
+  spends as it earns, so a radar or a SAM site you lay by hand waits for a moment
+  it happens to leave the metal lying; set a reserve first, lay it, then set it
+  back to 0.
+- `steel auto off` takes the whole seat back: every order is yours.
+  `steel auto on` hands it over again.
 
-Read how they are going with `steel ops` (intents, every goal's state, what each
-line makes, orders the autopilot had refused) and `steel forces`. You rarely
-order single units. When you do (`move`, `attack`, `board` ...), the autopilot
-leaves those units alone until they have stood idle for 20 seconds, so a force
-does not pull them back mid-errand; `steel detach <ids>` keeps them out until
-`steel attach <ids>`. `steel auto off` hands the seat fully back to manual
-one-unit orders (`steel help` lists them).
+## Orders by hand
+
+In a match with engine capability modules, `steel show <id> --json` also exposes
+that unit's permitted module status, actions and choices. Use
+`steel content-action <units> <module> <action> [--choice id] [--target id] [--at x,y]`
+with the identifiers listed there. This uses the same server order boundary as
+the HUD: ownership, visibility, stock, cooldown and action requirements still
+apply. A refused action changes nothing for that unit. These controls exist only
+when the active content declares the corresponding capability.
+
+Anything the brain would do, you can do yourself, at any moment:
+
+- **Units:** `steel move <units> <x,y> [--attack]`, `steel attack <units> <target>`,
+  `hold`, `stop`, `board`, `unload`, `ability`. The unit is then yours: the brain
+  leaves it alone until `steel attach <units>` (or `--all`) gives it back.
+  `steel detach <units>` takes units without an order. `steel brief` counts what
+  you hold (`hands`).
+- **Buildings:** `steel build <building> --near <x,y>` (a radar, SAM sites, a
+  turret where the brain did not put one), `steel upgrade <ids>`, `steel sell <ids>`.
+  The brain crews your blueprints and counts them toward its own plans.
+- **Production and research:** `steel produce <factory> <unit> [-n N]`,
+  `steel research <node>`. They go in the queue beside the brain's.
+- **Warheads:** `steel nuke targets` (the points the brain itself would aim at), `steel nuke launch <silo> x,y`. The brain
+  launches too while it runs `nukes`; leave that out of `--run` to choose every
+  target yourself.
+
+`steel help <verb>` has every option. Units are ids like `12,15` or predicates
+like `--idle --def buggy --near 40,30:8`; places are `x,y` in tiles, `@<id>` or `@hq`.
+
+## Direct control and scripts
+
+`steel direct` turns the brain off: nothing plays the seat but your orders and
+your scripts. `steel auto` hands it back.
+
+A **script** is a file of TypeScript or JavaScript; the session runs it every
+`every` sim seconds (0.2 at the least) against what your seat sees and sends
+the orders it gives, checked like the verbs and judged by the server like any
+click. It is how a rule holds between your turns: a battery pulled out of
+reach, a group taken out from under guns it cannot see, a line kept busy.
+
+```ts
+export default {
+  every: 0.5,
+  tick(s) { /* the whole seat: s.units(), s.enemies(), s.events, s.memory ... */ },
+  rules: {
+    arty(u, s) {  // once a run for each of your units of this kind; also 'army' and '*'
+      const close = s.enemies({ near: u, within: 6, armed: true, seen: 0 });
+      if (close.length) s.move(u, s.away(u, s.nearest(u, close)!, 5));
+    },
+  },
+};
+```
+
+- `steel script types > steel.d.ts` prints the whole API. Reading: `units`,
+  `buildings`, `enemies` (with `seen`, seconds since in sight), `deposits`,
+  `def`, `events` (the journal since the last run, losses with their killers),
+  `memory` (kept between runs), `brain`, `visible`, `ground`, `water`, `dist`,
+  `nearest`, `away`, `toward`. Orders: `move`, `attackMove`, `attack`, `stop`,
+  `hold`, `ability`, `build`, `produce`, `research`, `upgrade`, `sell`, `repair`,
+  `board`, `unload`, `rally`, `arm`, `launch`, `attach`, `detach`, `steer`,
+  and `log`.
+- `steel script try <file>` runs it once now and prints the orders it would
+  give, sending nothing. `steel script run <file>` runs it (again with the same
+  name replaces it); `steel script` shows every script's runs, orders, refusals
+  and errors; `steel script log [name]` what it said and why an order was
+  refused; `steel script stop <name>|--all`.
+- `steel lab --vs veteran --script <file>` (add `--direct` for a whole seat)
+  tests it headless against the built-in AI, many seeds in a minute: prove a
+  script there before a live match.
+- A unit a script orders is out of the brain's hands until `s.attach` gives it
+  back, as with any hand order. `s.steer({ run: [...] })` hands the brain only
+  the departments you name: take `army` and play it by script.
+- Limits: 100 ms a run; five failed runs in a row stop the script; the same
+  order to the same units is not sent again for 3 s; all scripts together send
+  30 orders a sim second. A script sees what your seat sees and nothing more,
+  and cannot touch files or the network.
 
 ## When something does not happen
 
-Every goal has a state in `steel plan` and `steel ops`: done, working (rising,
-upgrading), saving (with how much of the price is put by), held (metal: needs
-1,800, 1,210 spendable; tech: needs radar and reactor standing), blocked (the
-ground: outside the headquarters' build area, no shore, no free deposit; it
-tries again after a minute), or waiting (for a free engineer, for power). Read
-it before you change the plan: the fix is usually in the note.
-
 A refused order says so plainly: `refused, nothing was done: <order>: <why>`,
 with the figures (`not enough metal: 135 of its 180 is needed to start, 96 is
-free (436 on hand, 340 committed); the autopilot committed 340 in the same
-second`). Nothing was queued or placed. `build --near` names the rule the ground
-ran into (not enough metal, outside the build area, no free deposit) rather
-than saying there is no room.
+free`). Nothing was queued or placed.
 
-## Across water
+If the brain seems stuck, look at `steel auto` and `steel brief` first: `no enemy
+known yet: scouting` means it has found nothing to march on (scout for it, or give
+it a `--target`); `gathering … next push from 12:30` means it is waiting to march
+in a body (`--posture push` sends it now); a department you left out of `--run` is
+waiting on you.
 
-When the enemy starts on another landmass the autopilot plays the island plan
-(while you have not changed the plan): a navy yard and an airbase first,
-engineer boats and airlifted engineers for the islets, transports for the
-army. `steel brief` says so on its `reach` line. What can hurt an island base:
-aircraft, ships within range of the shore (a force sends each ship to the water
-in range of its target), and ground units landed by a lift. Ground units alone
-at home are a garrison: cap them with `mix factory ltank=2:6` and put the rest
-into the navy yard and the airbase.
+## Legacy: the CLI's own autopilot
 
-## Warheads
-
-A nuclear warhead costs 2,500 and 180 s, needs a radar and a reactor standing,
-and a silo holds three; an EMP costs 1,200 and needs a radar alone. A warhead
-flies as an aircraft: **SAM sites** (upgraded AA turrets: `keep samsite 2`)
-always shoot at it, other anti-air only at rank 2 or above, and the
-interceptor never does (it stops rockets). `steel keep warhead 2` keeps the
-magazines stocked and saves up for them; `steel nuke targets` ranks what you
-know of the enemy by what a blast there would take, with the SAM sites near
-each aim; `steel nuke launch <silo> x,y` fires. `steel wait --for nuke` wakes
-on a launch (theirs names the launchers you know; where it will land is never
-told to anyone), an interception, an impact, and the strike report a few
-seconds after yours lands (what was destroyed, damaged, or is hidden by fog).
+A server from before the brain does not know the order; the CLI then runs its
+own older autopilot in the seat instead, and says so (`steel status`). `steel
+auto --legacy` asks for it outright. Its standing intents are `steel keep
+<building> <n>` (build goals), `steel mix <line> unit=weight` (production),
+`steel force <name> --size N attack auto|x,y|#id` (army groups), `steel expand
+<deposit>`, `steel plan` and `steel scout on`. Under the brain those verbs do
+nothing and say so: `keep` is a hand `build`, `mix` is `auto --favour`,
+`force … attack` is `auto --target` or `--posture push`, or a hand
+`move --attack` for a group of your own.
 
 ## Rules
 
-- Use only `steel` verbs. Do not edit files, restart the server, or read the
-  server's files. You see only what a player sees (fog of war is real).
+- Use only `steel` verbs, and the script files you write for `steel script`.
+  Do not edit the game's files, restart the server, or read the server's files.
+  You see only what a player sees (fog of war is real).
 - Every output is plain text; add `--json` to any command for structured data.
-  Every list verb gives an array of rows. `units`, `buildings` and `enemies`
-  share their fields (`id`, `def`, `tile`, `hp`, `owner`); an enemy row adds
-  `kind` and `seen` (0 in sight now, else seconds since, `hp` as it was then).
-  `deposits` rows carry `status` and `reach`, `forces` rows `state` and `size`.
   Exit 0 means done, 1 means refused (the message says why), 2 usage, 3 no
   session or the server is gone.
 - One word per argument: zsh does not split an unquoted `$var`, so
-  `$S keep $goal` hands `steel` "extractor 4" as one argument. Use `${=goal}`,
-  an array, or separate words.
+  `$S build $what` hands `steel` "radar --near 40,30" as one argument. Use
+  `${=what}`, an array, or separate words.
 - Keep going until `steel status` shows phase `ended` or you are eliminated. Then
   `steel disconnect` and report the result, how the match turned, and what you
   would change.
@@ -243,20 +291,18 @@ seconds after yours lands (what was destroyed, damaged, or is hidden by fog).
 
 ```bash
 steel connect <address> --code <code> --name <name>   # join; --host-key to host
-steel status                                          # link, phase, seat, economy
-steel brief                                           # the whole situation
-steel enemies | steel deposits | steel map            # drill in
+steel status                                          # link, phase, seat, economy, the brain
+steel brief                                           # the whole situation, and what the brain is doing
+steel enemies | steel deposits | steel map | steel tech   # drill in
 steel defs <unit>                                     # a unit's stats and counters
-steel keep <building> <count> [--front|--rear] [--then] [--save]   # standing build goals
-steel keep warhead 2                                  # keep the silos stocked
-steel mix <line> <unit>=<weight>[:max] ...            # production, by weight
-steel expand <deposit>                                # take a metal deposit
-steel force <name> [--size N --mix a,b] <mission>     # attack auto|x,y|#id | defend x,y | harass | idle
-steel scout on                                        # keep the map lit
-steel plan | steel ops | steel forces                 # the goals, and how your intents are going
-steel detach <ids> | steel attach <ids>|--all         # out of the autopilot's hands, and back
-steel nuke targets                                    # where a warhead does the most
+steel auto [on|off] [--run depts] [--doctrine D] [--favour u=w,...] [--posture push|hold|auto] [--target x,y|none] [--reserve M]
+steel move <units> <x,y> --attack | steel attack <units> <target>   # take units into your hands
+steel attach <units>|--all | steel detach <units>     # give them back; take them without an order
+steel direct                                          # the brain off: your orders and your scripts alone
+steel script run <file> | try <file> | stop <name> | log [name] | types   # your own code on the seat
+steel build <building> --near <x,y> | steel produce <factory> <unit> | steel research <node>
+steel nuke targets | steel nuke launch <silo> x,y     # warheads
 steel wait <seconds> [--for contact,lost,attack,nuke] # let it run, report back
 steel disconnect                                      # leave
-steel lab --vs veteran                                # headless self-test, no server
+steel lab --vs veteran [--script <file>] [--direct]   # your seat (and scripts) against the built-in AI, headless
 ```

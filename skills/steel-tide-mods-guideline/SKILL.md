@@ -31,7 +31,7 @@ One vanilla unit copied and re-tuned. `extends` inherits everything (art, weapon
 ```json
 {
   "format": "steel-tide-mod",
-  "v": 1,
+  "v": 4,
   "id": "bison-ii",
   "name": [
     "Bison II",
@@ -87,7 +87,7 @@ Own art, a defended building, and a fourth level for a vanilla building line:
 ```json
 {
   "format": "steel-tide-mod",
-  "v": 1,
+  "v": 4,
   "id": "ironworks",
   "name": [
     "Ironworks",
@@ -222,14 +222,17 @@ Own art, a defended building, and a fourth level for a vanilla building line:
 
 ## Fields
 
-Anything not in these tables is ignored with a warning. Numbers outside the stated range are errors.
+Unknown ordinary fields produce a warning. Each extension package defines and validates its own configuration. Numbers outside the stated range are errors.
 
 ### mod.json (top level)
 
 | field | type | required | default | meaning |
 | --- | --- | --- | --- | --- |
+| `capacity` | standard \| large |  | standard | format 4: large allows 1024 defs, 2048 sheets, 512 sounds, 4 MiB metadata and 256 MiB stored data URLs; standard keeps 200/192/60, 1/24 MiB |
+| `requiredCapabilities` | capability id[] |  |  | Required package-provided capability IDs |
+| `extensionPackages` | { id, version, api, capabilities, schema, runtime, presentation? }[] |  |  | Versioned extension packages with SHA-256 verified schema, simulation and optional presentation modules (format 4) |
 | `format` | string | yes |  | always "steel-tide-mod" |
-| `v` | integer 1–1 | yes |  | format version, 1 |
+| `v` | integer 1–4 | yes |  | format version: 1 remains supported; factions and headquarters require 2; capability data requires 3; executable extension packages require 4 |
 | `id` | id | yes |  | the mod's id: lower case, letters, digits, `-`; also its folder in the registry |
 | `name` | text | yes |  | the name shown in the mod list |
 | `version` | string | yes |  | e.g. `1.0.0`; the game offers an update when the registry's is newer |
@@ -238,19 +241,99 @@ Anything not in these tables is ignored with a warning. Numbers outside the stat
 | `homepage` | string |  |  | a link: a repository, a thread |
 | `license` | string |  | CC-BY-4.0 | the mod's licence (SPDX id) |
 | `minGame` | string |  |  | the oldest game version it is written for |
-| `defs` | def[] | yes |  | the units, buildings and upgrade levels |
+| `defs` | def[] | yes |  | the units, buildings and upgrade levels; may be empty when terrains, music queues or menu backgrounds are supplied |
+| `factions` | faction[] |  |  | selectable factions, each with its own headquarters, starting builder and roster (format 2) |
+| `terrains` | terrain[] |  |  | up to 32 map-selected terrain variants; preserve their base terrain’s gameplay |
 | `sprites` | sheet[] |  |  | the sheets the defs draw with (see below) |
-| `sounds` | string |  |  | the recordings the weapons fire with (see below) |
+| `music` | { tracks, menu, setup, battle } |  |  | custom BGM tracks and ordered menu, setup and battle queues (see below) |
+| `menuBackground` | { cuts, queue } |  |  | ordered home-menu cut queue, mixing original scenes and this pack’s maps (see below) |
+| `sounds` | sound[] |  |  | the recordings the weapons fire with (see below) |
 | `screenshots` | path[] |  |  | pictures of the mod in play, relative to mod.json (`screenshots/1.png`): 4:3, at least 640 px wide, under 2 MB each, up to 8. The registry asks for at least one and shows them on the mod's page |
 | `maps` | string |  |  | maps the mod carries, relative to mod.json (`maps/city.steel-tide-map`): files exported from the Scenario Editor, up to 8, each under 512 KB. A map may stand the mod's own units; the setup screens offer it beside the player's own map while the mod is on |
-| `files` | { path: dataURL } |  |  | single-file form only: the sheets, sounds and maps, embedded as data URLs by path |
+| `files` | { path: dataURL } |  |  | single-file form only: the sheets, sounds, music and maps, embedded as data URLs by path |
 
 `name`, `description` and every `desc`/`name` on a def are *text*: a string (used for every language), `["English", "中文", "한국어"]` in that order, or `{ "en": "…", "zh": "…", "ko": "…" }`. Only English is required; a language left out reads as English.
+
+Capacity is an installation-time declaration. Omit it for the existing ordinary limits, or set `capacity: "large"` in format 4 for 1024 definitions and entries per production/build/reference list (ordinary lists allow 64), 2048 sheets, 512 sounds, 4 MiB of metadata and 256 MiB of stored data URLs. Large packs allow 100000000 HP per definition and 2 MiB per executable module; their combined source and configuration must still fit the metadata budget. All path, identity, reference and adds-only checks still apply. Budgets do not preallocate runtime memory. Ordinary multiplayer transfers manifests; players install the asset bytes locally.
+
+### Extension packages (format 4)
+
+Format 4 packs carry their own `extensionPackages`: versioned, SHA-256 verified schema, simulation and optional presentation code. Extension source, build steps, tests and documentation belong to the mod that owns them; its manifest embeds the executable package. Each mod can define its own namespaced capability IDs and configuration without a shared gameplay package or an engine catalog. The engine provides host API version 2 and retains compatible older package APIs. Declare package-provided IDs in `requiredCapabilities`, then put their data under `extensions[id]`. Only content which requests extensions prepares the optional host. Extension code is executable trusted code, not sandboxed data.
+Executable packages require `v:4`. Formats 1 and 2 and ordinary format 3 data remain supported; former built-in capability packs need compatible implementations embedded in format 4. A missing/unsupported capability rejects activation. Vanilla keeps its ordinary simulation; optional state and update work belong to the enabled match. Package schemas own their accepted fields, bounds, defaults and localization requirements.
+A package may declare `assets: { resourceId: "relative/file.wav" }` (up to 256 entries, or 2048 with large capacity). These files travel with the ordinary folder, packed file and world; the existing total asset-size limit applies. Its schema receives only its own `assetIds`; its browser factory receives `asset(id)` to resolve installed bytes without fetching arbitrary URLs. Optional `feedback(context, base)` selects local voice behavior once at match entry and returns `unitVoice` plus an optional `dispose`. Use the host recording mixer and scoped music queues, release package recordings and music scopes on disposal, and reuse native rendering/recoil where suitable. Gameplay-specific recording choices and cosmetic predicates belong to the mod.
+
+Read the [extension framework guide](https://github.com/steel-tide/mods/blob/main/docs/EXTENSION-FRAMEWORK.md) for the generic package contract, lifecycle, host SDK and trust model. Gameplay behavior and configuration are documented inside the mod that supplies the package.
+
+For locally chosen content, game/API consumers must `await prepareContentSchema(raw, true)` before synchronously calling `parseDefinitionPack(raw)` or `parseMod(raw)` on capability-bearing content; await `prepareContentCapabilities(packs)` before opening a match. For a world, prepare its embedded packs by passing the raw world to `prepareContentSchema`. Registry tooling likewise explicitly approves local files. Network inputs use `prepareContentSchema(raw)` and cannot approve unknown code. Read the extension framework guide in the mod repository for package ownership, trust and SDK details. Never ignore a schema or capability loading failure.
+
+The shared inspection model exposes private state and available actions only to authorized viewers. Actions go through `contentAction` and the ordinary commands/orders gateway. The CLI exposes the same interface with `steel content-action <units> <module> <action> [--choice id] [--target id] [--at x,y]`. Port only source combinations the contract represents faithfully; omit and document unsupported behavior.
+
+### A faction (`factions[]`, format 2)
+
+| field | type | required | default | meaning |
+| --- | --- | --- | --- | --- |
+| `id` | id | yes |  | unique faction id, prefixed with the mod id and a dash |
+| `name` | text | yes |  | the faction name in game setup |
+| `headquarters` | id | yes |  | this mod’s land headquarters definition |
+| `builder` | id | yes |  | this mod’s ground or amphibious builder; the HQ must produce it and it must rebuild the HQ |
+| `roster` | id[] |  |  | permitted definitions, including prerequisites and upgrades; defaults to all definitions in this mod |
+
+A faction is selected per seat in Conquest and Breakthrough. It changes the headquarters, starting builders and allowed build/production roster; teams and victory rules still belong to the match. The chooser is hidden with only Steel Tide available. The HQ must produce its builder, and that builder must rebuild its HQ. Both must belong to this mod. A starting HQ has no prerequisites; its builder may require only that HQ. Roster building prerequisites must also be in the roster. Format 1 mods continue to work unchanged.
+
+### A terrain variant (`terrains[]`)
+
+| field | type | required | default | meaning |
+| --- | --- | --- | --- | --- |
+| `id` | id | yes |  | unique terrain variant id, prefixed with the mod id and a dash |
+| `name` | text | yes |  | the terrain style name in the editor |
+| `base` | grass \| sand \| road \| mud \| marsh \| snow \| rubble \| ice \| city | yes |  | the existing terrain whose movement, construction and combat behavior stays unchanged |
+| `texture` | string |  |  | flat terrain material: a ter.<mod id>-<name> sheet in this pack; city uses its city materials instead |
+| `city` | { roof, wall, window, lamp, roofTexture, wallTexture, groundTexture, signTexture, accent, accent2, architecture } |  |  | materials, lights and optional visual architecture; only with base city |
+
+Terrain variants add map-selected appearances without changing terrain numbers, movement, construction, cover or city destruction. Enabling a mod alone never repaints a vanilla map. A map opts in with `"terrainVariants": { "city": "my-mod-city" }`; the editor preserves these bindings in saves and exports. Missing or disabled content renders the ordinary base terrain, even when old images remain cached. A terrain-only pack uses `"defs": []`.
+
+Terrain materials are single-frame, square sheets named `ter.<mod id>-<name>`, declared in `sprites` with equal whole `fw` and `fh` (4–512; 128 recommended). `teams`, `stripBg`, `rotated`, `fitFootprint` and `freezeStatic` are false; their false defaults preserve the image. Anchors, mounts, animation states/regions and pivots are not supported. Keep flat materials opaque and seamless, without painted buildings, text, cast shadows or transparent cutouts. `city.signTexture` may instead contain sign artwork. A variant can reference only terrain sheets in its own pack.
+
+#### City appearance (`terrains[].city`)
+
+| field | type | required | default | meaning |
+| --- | --- | --- | --- | --- |
+| `roof` | string |  |  | roof color, #RRGGBB |
+| `wall` | string |  |  | wall color, #RRGGBB |
+| `window` | string |  |  | lit window color, #RRGGBB |
+| `lamp` | string |  |  | streetlamp color, #RRGGBB |
+| `roofTexture` | string |  |  | roof material, a ter.<mod id>-<name> sheet in this pack |
+| `wallTexture` | string |  |  | wall material, a ter.<mod id>-<name> sheet in this pack |
+| `groundTexture` | string |  |  | courtyard material, a ter.<mod id>-<name> sheet in this pack |
+| `signTexture` | string |  |  | 4×4 atlas of 16 square signs in row-major order, a ter.<mod id>-<name> sheet in this pack; custom architecture selects a cell per building |
+| `accent` | string |  |  | primary architectural lighting color, #RRGGBB |
+| `accent2` | string |  |  | secondary architectural lighting color, #RRGGBB |
+| `architecture` | { forms, minStoreys, maxStoreys, coverage, greenery, equipment, facade } |  |  | optional building kit; omitted keeps ordinary city geometry |
+
+A city variant supplies colors, materials or a visual architecture kit while preserving city tile collision, cover and destruction rules. Without `architecture`, city geometry stays exactly ordinary. Flat base terrains require `texture`; cities instead use `roofTexture`, `wallTexture` and `groundTexture`, with `signTexture` for architectural signs. Unsupported bases such as water, forest and cliffs cannot be declared as flat material variants.
+
+#### City architecture (`terrains[].city.architecture`)
+
+| field | type | required | default | meaning |
+| --- | --- | --- | --- | --- |
+| `forms` | (slab \| court \| terrace \| stepped)[] |  | slab, court, terrace, stepped | distinct building forms to mix: slab blocks, courtyard blocks, terraces and stepped towers |
+| `minStoreys` | integer 1–4 |  | 2 | minimum target storeys for the main building; smaller lots and wings may be shorter; must not exceed maxStoreys |
+| `maxStoreys` | integer 1–4 |  | 4 | maximum target storeys for the main building; does not change terrain height or cover |
+| `coverage` | number 0.35–0.9 |  | 0.72 | building coverage within each visual lot |
+| `greenery` | number 0–1 |  | 0.1 | decorative vegetation density |
+| `equipment` | number 0–1 |  | 0.65 | rooftop machinery and service equipment density |
+| `facade` | ribbon \| panel \| industrial |  | panel | wall structure: ribbon windows, panel cladding or industrial frames |
+
+The optional kit changes visible building forms, storeys, lot coverage, planting, rooftop equipment and facade treatment. It never changes terrain height, passability or combat. `forms` lists distinct supported forms. Storey bounds use the documented defaults when omitted and must satisfy `minStoreys <= maxStoreys`. The existing damage states still control collapsed buildings and extinguished signs.
+
+`signTexture` is a 4×4 atlas of 16 square signs in row-major order; a building’s deterministic seed selects one cell. Use equal `fw`/`fh` divisible by 4 (128 recommended), with dark unlit backing and bright lettering or symbols. Pixels whose strongest RGB channel exceeds 120 emit their own color at night. The image is one frame, not a horizontal 16-frame animation strip. Missing sign artwork uses procedural glyphs.
 
 ### A def (`defs[]`)
 
 | field | type | required | default | meaning |
 | --- | --- | --- | --- | --- |
+| `extensions` | { capability: configuration } |  |  | Configuration keyed by a required engine capability (format 3) |
+| `isHQ` | boolean | buildings only |  | a headquarters: holds territory and production slots, follows the ordinary HQ loss and sale rules; format 2 |
 | `id` | id | yes |  | unique across every mod and the vanilla roster; prefix a generic word with your mod's id |
 | `name` | text | yes |  | as the HUD shows it |
 | `desc` | text |  | "" | the tooltip line |
@@ -261,11 +344,13 @@ Anything not in these tables is ignored with a warning. Numbers outside the stat
 | `cost` | number 0–99999 | yes |  | metal |
 | `buildTime` | number 0–3600 |  | cost ÷ 14 | seconds at full power |
 | `pop` | integer 0–50 |  | 1 for a unit, 0 for a building | population it counts for |
-| `hp` | number 1–1000000 | yes |  | hit points |
+| `hp` | number 1–100000000 | yes |  | hit points; standard capacity is limited to 1000000, large to 100000000 |
 | `armor` | light \| medium \| heavy \| ship \| sub \| air \| structure |  | by domain | the armour class weapons are multiplied against |
+| `impactMaterial` | armor \| earth \| concrete |  | concrete for structure armor, armor otherwise | projectile-impact sound material; does not change damage. Both ordinary and heavy impacts use the matching recorded family |
+| `directionalArmor` | { front, side, rear } | units only |  | ground hull direct-hit multipliers `{front, side, rear}`, each 0–10; 90° front/rear arcs and 90° on each side. Arc fire, collateral blasts, mines and fire ignore facing. Enables slow reversing for short moves behind the hull |
 | `speed` | number 0–1000 | units only | 60 | world px/s (a tile is 32) |
 | `turnRate` | number 0–50 | units only | 3.5 | rad/s |
-| `vision` | number 0–64 |  | 8 | sight, in tiles |
+| `vision` | number 0–64 |  | 8 | sight, in tiles; rounded to the nearest whole tile when activated |
 | `radius` | number 1–200 |  | 9, or the footprint | collision radius, world px, and the *combat* yardstick: range, splash and hits are measured to it |
 | `body` | { r, len } | units only | the circle of `radius` | the room the hull takes up when units push each other apart, world px: `r` its half-width, `len` its length less the two round ends. A long hull is what a circle cannot say. A ship whose beam (`r` twice) is over a tile (32) needs that many tiles of water abeam, rounded up: it never enters a channel narrower than itself |
 | `weapons` | weapon[] |  | [] | the weapons (see below); an empty list is unarmed |
@@ -293,6 +378,7 @@ Anything not in these tables is ignored with a warning. Numbers outside the stat
 | `nukeCost` | number 0–99999 |  |  | a launcher: metal per warhead |
 | `nukeTime` | number 0–3600 |  |  | a launcher: seconds per warhead |
 | `armsAtBase` | number 0–64 | units only |  | a launcher: fabricates its warheads only within this many tiles of one of its own bases of its kind (a naval yard for a hull, an airbase for an aircraft; and, an `underwater` one, only on the surface), and holds the work otherwise (the Kraken's and the Wraith's 4) |
+| `rearmTime` | number 0.1–600 |  | 15 | seconds to fill every gun that carries `ammo` from empty, at a base of its kind |
 | `hatch` | number 0–30 |  |  | a launcher: seconds its doors take to open before the warhead leaves, and to close after; none fires on the spot |
 | `antiWarhead` | boolean |  |  | its anti-air may fire on a nuclear warhead without a veteran's rank |
 | `interceptRange` | number 0–64 |  |  | point defence: reach in tiles |
@@ -300,6 +386,7 @@ Anything not in these tables is ignored with a warning. Numbers outside the stat
 | `interceptReload` | number 0.05–600 |  |  | point defence: seconds per round replaced |
 | `interceptMuzzleOffset` | number 0–200 |  |  | point defence: launcher length, world px |
 | `transportCap` | integer 1–50 | units only |  | a transport: hold, in cargo weight |
+| `transportMaxWeight` | number 0–50 | units only | transportCap | a transport: maximum cargo weight of one passenger |
 | `cargoReach` | number 0.5–4 | units only | 1 | a transport: how far its load and unload distances stretch, as a multiple of the default (the landing craft's 1.1, the Moray's 1.5); on a ship it widens the ground its ramp reaches too |
 | `landsForCargo` | boolean | units only |  | a cargo plane that touches down to load |
 | `cargoWeight` | number 0–50 | units only | pop | how much of a hold it takes |
@@ -308,10 +395,12 @@ Anything not in these tables is ignored with a warning. Numbers outside the stat
 | `stealth` | number 0–64 | units only |  | seen only within this many tiles of an enemy |
 | `detect` | number 0–64 |  |  | reveals stealth within this many tiles |
 | `radar` | boolean |  |  | sees by radio: the sight circle ignores weather and the hour, and drops to 7 tiles when short of power |
+| `remoteVision` | boolean | units only |  | remote camera feed: hostile jamming blocks its sight within the field |
+| `jamRange` | number 0–64 | buildings only |  | electronic-warfare radius in tiles; requires full power, reveals its location, blocks hostile radar and remote vision, never visual sight or sonar |
 | `hovers` | boolean | units only |  | an aircraft that hovers instead of orbiting |
 | `kamikaze` | boolean | units only |  | the unit is its own round: it never picks a target, and its one weapon flies it into what it is ordered at (the Hornet) |
-| `lowFlying` | boolean | units only |  | an aircraft at treetop height: machine guns and autocannons that fire on the ground reach it too (the Hornet) |
-| `limit` | integer 1–200 | units only |  | at most this many a faction at once, alive and queued together (the Hornet's 6) |
+| `lowFlying` | boolean | units only |  | an aircraft at treetop height: machine guns and autocannons that fire on the ground reach it too (the helicopters and the Hornet) |
+| `limit` | integer 1–200 | units only |  | at most this many a faction at once, alive and queued together (the Hornet's 10) |
 | `altitude` | number 0–64 | units only | 12 | an aircraft's drawn height, px |
 | `fireOnMove` | boolean | units only |  | keeps shooting on a plain move |
 | `burnMult` | number 0–4 | units only | 1 | what fire on the ground does to it, as a multiplier (the Drake's 0.5) |
@@ -338,6 +427,7 @@ An `upgradeOf` def becomes upgrade-only (never placed directly): the named build
 
 | field | type | required | default | meaning |
 | --- | --- | --- | --- | --- |
+| `extensions` | { capability: configuration } |  |  | Optional engine weapon configuration (format 3) |
 | `id` | string |  | w1, w2… | a name for the weapon |
 | `cls` | mg \| autocannon \| cannon \| at \| he \| rocket \| navgun \| ashm \| torpedo \| aa | yes |  | what it was built to kill; picks its row of the armour matrix |
 | `dmg` | number 0–100000 | yes |  | damage per hit |
@@ -351,14 +441,18 @@ An `upgradeOf` def becomes upgrade-only (never placed directly): the named build
 | `splash` | number 0–500 |  |  | blast radius, world px |
 | `burst` | integer 1–32 |  |  | shots per burst |
 | `burstDelay` | number 0–5 |  |  | seconds between the shots of a burst |
+| `ammo` | integer 1–9999 |  |  | rounds carried, a burst one: dry, a unit goes home for more on its own (an airbase for an aircraft, a naval yard for a hull, a war factory for the rest) and a building refills where it stands; absent never runs dry |
+| `vsWarhead` | number 0–10 |  | 1 | against a warhead in flight, this share of what it does to an aircraft |
 | `homing` | boolean |  |  | the round tracks its target |
 | `interceptable` | boolean |  |  | point defence may shoot it down |
 | `arc` | boolean |  |  | a ballistic arc (artillery) |
 | `turret` | boolean |  | true when the def has a turretSprite | fired from the rotating part |
+| `recoil` | number 0–10 |  |  | cosmetic barrel recoil stroke, art px; requires barrel regions on the turret art, changes no weapon statistic |
 | `vertical` | boolean |  |  | launched straight up out of the hull, like a submarine's missile tubes: it fires at any bearing and the hull never turns for it; `muzzleOffset` then runs along the keel to the tubes |
 | `muzzleOffset` | number 0–200 |  |  | pivot to muzzle, world px; a unit's art is drawn 1.5625×, so measure on the sheet and multiply |
 | `bores` | integer 1–8 |  | 1 | barrels, fired one after another |
 | `boreSpacing` | number 0–60 |  |  | gap between adjacent barrels, world px |
+| `muzzlePoints` | string |  |  | explicit muzzle positions, fired in list order: 1–8 `{ forward, lateral }` points in world px from the firing pivot (forward along the bore, lateral to its right; either may be negative); replaces `muzzleOffset`, `bores` and `boreSpacing` |
 | `spread` | number 0–200 |  |  | inaccuracy at full range, world px |
 | `friendlyFire` | boolean |  |  | the blast hurts your own side too |
 | `fan` | number 0–1.5 |  |  | a `flame` jet: the half-angle it is sprayed across, radians |
@@ -371,7 +465,7 @@ The damage a weapon does is `dmg × the armour matrix cell for (cls, target armo
 
 ```
 mg          light ×1.5  medium ×0.8  heavy ×0.4  structure ×0.35  ship ×0.5  air ×0.7
-autocannon  light ×1.5  medium ×1  heavy ×0.5  structure ×0.5  ship ×0.7
+autocannon  light ×1.5  medium ×1  heavy ×0.5  structure ×0.5  ship ×0.7  air ×0.35
 cannon      light ×0.6  medium ×1.3  heavy ×1  structure ×0.8  ship ×0.9
 at          light ×0.4  medium ×1.1  heavy ×1.8  structure ×0.7  ship ×0.75
 he          light ×1.2  medium ×1  heavy ×0.75  structure ×1.6  ship ×1
@@ -414,7 +508,7 @@ A hull with more than one gun — a battleship's turrets fore and aft, a tank wi
 
 | field | type | required | default | meaning |
 | --- | --- | --- | --- | --- |
-| `key` | string | yes |  | `u.<id>` for a body, `tur.<id>` for a rotating part, `dec.<name>` for a decal, `prj.<name>` for a round and `fx.<name>` for an effect a weapon's look or a rule plays; never a vanilla key |
+| `key` | string | yes |  | `u.<id>` for a body, `tur.<id>` for a rotating part, `dec.<name>` for a decal, `prj.<name>` for a round and `fx.<name>` for an effect a weapon's look or a rule plays; `ter.<mod id>-<name>` for terrain materials; never a vanilla key |
 | `file` | string | yes |  | the image, relative to mod.json (PNG, WebP or JPEG) |
 | `frames` | integer 1–64 |  | 1 | animation frames, left to right in one strip |
 | `fw` | number 4–512 |  | the footprint (a building) or the image | in-game frame width, whole world px |
@@ -424,6 +518,7 @@ A hull with more than one gun — a battleship's turrets fore and aft, a tank wi
 | `pivotY` | number 0–1 |  | 0.5 | rotation pivot, as a fraction of the frame |
 | `anchorY` | number 0–512 |  |  | px from the top to the footprint centre (tall buildings) |
 | `mount` | [x, y] |  |  | a body: where its turret sits (or, with a repair aura, where the beam leaves), as `[fx, fy]` |
+| `barrels` | [left, top, right, bottom][] |  |  | exposed barrel rectangles, each `[left, top, right, bottom]` in 0–1 fractions of the up-facing source frame, in muzzle firing order; leave mantlets fixed. Pair with weapon `recoil` (art px) |
 | `fps` | number 0–60 |  |  | animation speed |
 | `teams` | boolean |  | true | recolour magenta per faction; `false` draws the sheet as painted for every faction, and for the wreck |
 | `ss` | integer 1–4 |  |  | supersample factor; omit to let the game choose |
@@ -435,6 +530,58 @@ A hull with more than one gun — a battleship's turrets fore and aft, a tank wi
 | `bgMinLuma` | number 0–255 |  |  | lightest colour still taken as background |
 | `artifactCleanup` | boolean |  |  | sweep specks left by background removal |
 | `anims` | { moving, idle, firing } |  |  | a unit body's frames by what it is doing, `{ moving, idle, firing }`, each `[first, last]` or `[first, last, fps]`: a tank that is a tree when it stands, a walker whose legs move only when it does (see Animation states) |
+
+Barrel recoil is available to any definition with a rotating turret: put `recoil: 2` on its turret weapon (stroke in art pixels) and `barrels: [[0.4, 0, 0.6, 0.45]]` on its turret sheet. Rectangles use 0–1 fractions of the up-facing source frame, must have positive area and must not overlap. Keep stationary mantlets outside them. For several barrels, list rectangles in the same order as `muzzlePoints`, or left to right when using `bores`/`boreSpacing`. Each firing mount and barrel recoils independently; custom or hidden muzzle flashes work too. Inherited art keeps its barrel regions; custom art supplies its own. Recoil changes no combat statistic.
+
+### Home menu background (`menuBackground`)
+
+| field | type | required | default | meaning |
+| --- | --- | --- | --- | --- |
+| `cuts` | cut[] |  |  | up to 16 custom live scenes |
+| `queue` | cut id[] | yes |  | 1–32 cut IDs in repeating order; original IDs: flank, sea, winter, raid, landing, rockets, home, nuke |
+
+| field | type | required | default | meaning |
+| --- | --- | --- | --- | --- |
+| `id` | id | yes |  | unique cut ID beginning with the mod ID and a dash |
+| `map` | string | yes |  | a path in this pack’s maps; at most 128 × 128 tiles and 200 placed units/buildings |
+| `camera` | { tx, ty, zoom } | yes |  | opening framing: { tx, ty, zoom } |
+| `cameraEnd` | { tx, ty, zoom } |  |  | end framing for a 13-second drift; omitted holds camera |
+| `weather` | clear \| rain \| snow |  | clear | weather held throughout the cut |
+| `minutes` | number 0–24 |  | 6 | held day-cycle time: 0 dawn, 6 noon, 12 dusk, 18 midnight |
+| `seed` | integer 0–2147483647 |  | 1 | simulation seed |
+| `orders` | { owner, tx, ty }[] |  |  | opening attack-move targets for the map’s mobile units, by owner |
+
+| field | type | required | default | meaning |
+| --- | --- | --- | --- | --- |
+| `tx` | number 0–128 | yes |  | horizontal camera centre in tiles, inside the map |
+| `ty` | number 0–128 | yes |  | vertical camera centre in tiles, inside the map |
+| `zoom` | number 0.25–4 | yes |  | camera zoom, capped by the menu on small screens |
+
+| field | type | required | default | meaning |
+| --- | --- | --- | --- | --- |
+| `owner` | integer 0–7 | yes |  | map spawn index; one opening attack-move per owner |
+| `tx` | number 0–128 | yes |  | target tile x |
+| `ty` | number 0–128 | yes |  | target tile y |
+
+Supply a nonempty queue to replace the home-menu reel. It repeats in listed order from a random starting cut, 13 seconds per cut, with the usual camera drift and fades. Mix original IDs with your own, or use only your own. The last active pack with usable cuts wins; disabling it restores the previous reel. A background-only pack may use `defs: []`. A custom cut names a file in `maps`, with its placed units and buildings; every owner needs a spawn, and every camera/order point must be inside the map. Each spawn is a separate side; no AI, default bases or scenario triggers run. Place generators to power the forces. Optional opening orders attack-move all mobile units belonging to the named owner. Missing or invalid cuts are skipped; an unusable queue keeps the previous reel. Reduced motion keeps the still background.
+
+### Background music (`music`)
+
+| field | type | required | default | meaning |
+| --- | --- | --- | --- | --- |
+| `tracks` | track[] |  |  | up to 32 custom recordings, each with an id and file |
+| `menu` | track id[] |  |  | ordered repeating queue for menus; also used for setup unless setup is supplied. Omitted keeps the previous queue; [] is silence |
+| `setup` | track id[] |  |  | optional separate queue for match setup |
+| `battle` | track id[] |  |  | ordered repeating queue during battle. Omitted keeps the previous queue; [] is silence. Built-in IDs: menu, glassline-drive, setup, cold-front, victory, defeat, battle-1, battle-2, assembly-gears, disciplined-unease, methodical-calm, iron-standard, danger-close, dead-reckoning, zero-hour, stand-to, stand-down |
+
+| field | type | required | default | meaning |
+| --- | --- | --- | --- | --- |
+| `id` | id | yes |  | unique track id: <mod id>-<name>; cannot replace a built-in ID |
+| `file` | string | yes |  | MP3, Ogg or WAV path relative to mod.json |
+
+Each supplied queue replaces that slot, plays in listed order and repeats, keeping the normal gaps, music volume and pause behavior. Keep built-in IDs to mix original tracks with your own; use only your own IDs for a complete replacement. Omitted queues keep the previous selection; an empty queue silences the slot. The last active pack supplying a slot wins. Disabling it restores the preceding pack or the original shuffle. A music-only pack uses `defs: []`. Victory and defeat remain unchanged. Tracks travel with the other mod assets, within the existing total asset limit.
+
+Built-in music IDs by original slot: menu: menu, glassline-drive; setup: setup, cold-front; victory: victory; defeat: defeat; battle: battle-1, battle-2, assembly-gears, disciplined-unease, methodical-calm, iron-standard, danger-close, dead-reckoning, zero-hour, stand-to, stand-down. Any of these IDs may appear in a custom queue; an unshipped file is skipped.
 
 ### A sound (`sounds[]`)
 
@@ -786,18 +933,18 @@ A mod may carry maps: files the game's Scenario Editor exports (`.steel-tide-map
 
 ## The vanilla roster (ids you may `extends`, name in `producedBy`/`builtBy`/`requires`/`upgradeOf`, or borrow art from)
 
-- ground units: engineer (T1, 200), buggy (T1, 60), ltank (T1, 120), mbt (T2, 280), htank (T3, 900), td (T2, 320), flak (T1, 170), sam (T2, 400), arty (T2, 420), mlrs (T3, 760), radarcar (T3, 480), salamander (T3, 800), bulwark (T3, 650), drake (T2, 300), hercules (T2, 350), scorpion (T3, 1100)
-- ships: gunboat (T1, 130), mboat (T1, 280), frigate (T2, 600), destroyer (T2, 700), sub (T2, 480), btlship (T3, 1700), seatrans (T1, 220), engboat (T1, 200), kraken (T3, 1000), moray (T3, 700)
-- amphibious units: gator (T2, 240)
-- aircraft: hornet (T2, 120), drone (T1, 40), fighter (T2, 380), heli (T1, 340), jet (T2, 400), mjet (T2, 520), bomber (T2, 1000), theli (T1, 280), c47 (T2, 650), gunship (T3, 1600), wraith (T3, 1400), cormorant (T3, 700)
-- buildings: hq (T1, 2500), extractor (T1, 120), extractor2 (T2, 310, upgrade level), extractor3 (T3, 810, upgrade level), platform (T1, 120), platform2 (T2, 310, upgrade level), platform3 (T3, 810, upgrade level), power (T1, 140), power2 (T2, 400, upgrade level), power3 (T3, 1100, upgrade level), factory (T1, 320), factory2 (T2, 740, upgrade level), factory3 (T3, 1640, upgrade level), airbase (T1, 350), airbase2 (T2, 830, upgrade level), airbase3 (T3, 1780, upgrade level), navyard (T1, 380), navyard2 (T2, 800, upgrade level), navyard3 (T3, 1750, upgrade level), mgturret (T1, 130), gatling (T2, 390, upgrade level), cannonturret (T1, 320), cannonturret2 (T2, 740, upgrade level), aaturret (T1, 240), samsite (T2, 560, upgrade level), interceptor (T2, 450), interceptor2 (T3, 1100, upgrade level), sandbag (T1, 40), repairtower (T1, 360), radar (T2, 400), warlab (T1, 500), reactor (T3, 1400), nukesilo (T3, 1800)
+- ground units: engineer (T1, 150), buggy (T1, 60), ltank (T1, 120), mbt (T2, 280), htank (T3, 900), td (T2, 320), flak (T1, 170), sam (T2, 400), arty (T2, 420), mlrs (T3, 760), radarcar (T3, 480), salamander (T3, 800), bulwark (T3, 650), drake (T2, 400), hercules (T2, 350), scorpion (T3, 1100)
+- ships: gunboat (T1, 130), mboat (T1, 280), frigate (T2, 700), destroyer (T2, 700), sub (T2, 480), btlship (T3, 1700), carrier (T3, 2200), seatrans (T1, 220), engboat (T1, 200), kraken (T3, 1000), moray (T3, 700)
+- amphibious units: gator (T2, 200)
+- aircraft: hornet (T2, 120), drone (T1, 40), fighter (T2, 380), heli (T2, 380), jet (T2, 450), mjet (T2, 520), bomber (T2, 1000), theli (T1, 280), c47 (T2, 650), gunship (T3, 1800), wraith (T3, 1400), cormorant (T3, 700)
+- buildings: hq (T1, 2500), hq2 (T2, 17500, upgrade level), extractor (T1, 120), extractor2 (T2, 310, upgrade level), extractor3 (T3, 810, upgrade level), platform (T1, 120), platform2 (T2, 310, upgrade level), platform3 (T3, 810, upgrade level), power (T1, 140), power2 (T2, 400, upgrade level), power3 (T3, 1100, upgrade level), factory (T1, 320), factory2 (T2, 740, upgrade level), factory3 (T3, 1640, upgrade level), airbase (T1, 380), airbase2 (T2, 830, upgrade level), airbase3 (T3, 1780, upgrade level), navyard (T1, 350), navyard2 (T2, 800, upgrade level), navyard3 (T3, 1750, upgrade level), mgturret (T1, 130), gatling (T2, 330, upgrade level), cannonturret (T1, 320), cannonturret2 (T2, 660, upgrade level), aaturret (T1, 400), samsite (T2, 1000, upgrade level), interceptor (T2, 450), interceptor2 (T3, 1100, upgrade level), sandbag (T1, 40), landmine (T1, 60), watermine (T1, 60), repairtower (T1, 360), radar (T2, 400), warlab (T1, 500), veil (T2, 600), reactor (T3, 1400), nukesilo (T3, 1800)
 
 ## Test
 
 1. Validate: in a clone of the registry, `node tools/check.mjs path/to/my-mod` prints every error with its path into mod.json. (No clone? The game says the same things when the mod is loaded.)
 2. Load it in the game: Settings → Mods → *Open folder…* (Chrome keeps the folder open, so *Reload* re-reads your edits) or *Upload file…* (a zip of the folder, or a `.steel-tide-mod` file). Errors are listed on the spot; a loaded mod says how many units and buildings it added.
-3. Play: start a Conquest match. Your units are in the factory's production list from the level you gave them; buildings are in the engineer's build menu; an upgrade level is on its building's Upgrade button. The console (backquote) has `give <id>` for anything. Mods apply to Conquest and the campaign; a networked match is always unmodded.
-4. From a static server: `npx serve --cors path/to/my-mod` then open `https://play.steelti.de/?mod=http://localhost:3000/` — the mod is fetched at every boot, so a page reload picks up an edit.
+3. Play: start a Conquest match. Your units are in the factory's production list from the level you gave them; buildings are in the engineer's build menu; an upgrade level is on its building's Upgrade button. The console (backquote) has `give <id>` for anything. Network players need matching packs and support for their required host API.
+4. From a static server: `npx serve --cors path/to/my-mod` then open `https://play.steelti.de/?mod=http://localhost:3000/`. Data-only mods refresh at boot. Executable packages require an explicit local install first, and changed package code needs an explicit reload.
 
 ## Publish
 
@@ -808,6 +955,6 @@ A mod may carry maps: files the game's Scenario Editor exports (`.steel-tide-map
 
 ## Rules
 
-- A mod adds; it does not change vanilla defs, art, rules or interface. Do not try to override a vanilla id or key; the validator refuses it.
+- A mod adds definitions and assets; it does not change vanilla defs, art, rules or interface. Music and menu-background queues are explicit exceptions: they select the soundtrack and backdrop without overwriting built-in tracks or cuts. Do not try to override a vanilla id or key; the validator refuses it.
 - Keep it honest: a unit needs a counter. The armour matrix is how the game makes one; give a new weapon a class it belongs to rather than an override on every cell.
 - A mod is published under the licence its manifest names (default CC-BY-4.0). Only ship art you have the right to.

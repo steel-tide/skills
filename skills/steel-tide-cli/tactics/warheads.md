@@ -31,9 +31,13 @@ the Missile Interrupter never does.
 
 - `steel keep warhead 1` builds the radar, reactor and silo it needs and saves
   up. Guard the silo with AA; a single bomber can kill an unguarded one.
-- `steel nuke targets` ranks aims by what a blast there takes, with the SAM
-  sites in reach. A cluster of five or more SAM sites stops anything; aim
-  elsewhere.
+- `steel nuke targets` lists the best points to aim at: seldom a building's
+  centre, usually the ground between several dear ones that one blast kills
+  together. Each row says what it would destroy and only damage, the chance the
+  warhead gets past the SAM sites you know of from your silo, and what of yours
+  it would take. Above a score of about 1,600 it is worth the warhead. Two SAM
+  sites on the way let a warhead through; three stop it more often than not,
+  and four or more nearly always.
 - **Aim off the target, away from their SAM sites.** The blast reaches 6 tiles,
   so a point 3 tiles from the target, on the far side from their SAM cluster, still
   catches it while the flight line stays out of the SAM sites' reach.
