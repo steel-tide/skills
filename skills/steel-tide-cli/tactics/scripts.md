@@ -92,6 +92,10 @@ tick(s) {
 - The same order to the same units is sent once in three seconds, and all
   scripts together send 30 orders a sim second. Order what changed, not
   everything every run.
+- `s.holdFire(u)` keeps a unit from firing on its own (an ambush, a column
+  slipping past guns); `s.holdFire(u, false)` or any attack order releases it,
+  and `u.holdFire` says which it is on. Like any order, it takes the unit from
+  the brain.
 - Several orders in one run are each checked against the same metal: the
   second may be refused for metal the first took. Spend against `s.free`, and
   count down as you go.

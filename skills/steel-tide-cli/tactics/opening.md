@@ -42,9 +42,11 @@ others they are simply good play):
   whatever they reach, seen or not. Units and buildings dying with nothing in
   sight means artillery, and the loss line names the gun (`lost mbt x3 to mlrs
   x2`): look along the line to the enemy for open ground or water within 13
-  tiles, get vision there (radar, a fast unit), and send tanks into it by hand.
-  `--favour arty=2` gives you counter-battery, and a script can pull a group
-  out from under the shells in the second they land (`scripts.md`).
+  tiles, get vision there (radar, a fast unit), and send tanks into it by hand;
+  once the gun is in sight, `steel priority <id>` turns every gun of yours that
+  reaches it onto it. `--favour arty=2` gives you counter-battery, and a script
+  can pull a group out from under the shells in the second they land
+  (`scripts.md`).
 - **Know what they build.** `steel enemies` lists what you have seen. An airbase
   or helicopters: `--favour flak=2,sam=2` and AA turrets. A radar plus a reactor:
   warheads are coming (`warheads.md`), so SAM sites now.

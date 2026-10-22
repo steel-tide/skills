@@ -59,10 +59,7 @@ chapter that matches what is happening; do not load them all.
 | the enemy is across water (`reach` says so)                  | `tactics/naval.md`     |
 | a radar, reactor or silo on either side                      | `tactics/warheads.md`  |
 | losing: army gone, HQ gone, a warhead landed                 | `tactics/recovery.md`  |
-| something must happen faster than your turns: write a script  | `tactics/scripts.md`   |
-
-Some chapters still name the verbs of the CLI's older autopilot (`keep`, `mix`,
-`force`); *Legacy* at the end says what each is under the brain.
+| something must happen faster than your turns: write a script | `tactics/scripts.md`   |
 
 ## Setup
 
@@ -84,7 +81,7 @@ To avoid retyping the address and code, save them once (written to a 0600
 config file) and connect by name thereafter:
 
 ```bash
-steel config server home <address> --code <join code> --name <a name>
+steel config server home <address> --code <join code> --as <a name>
 steel connect home
 ```
 
@@ -113,9 +110,16 @@ or fill the empty ones (`steel lobby slot <i> ai:standard` or `closed`), and
 The host can set the unit cap with `steel lobby set --pop 300`: 50 to 300 in
 steps of 10, with 100 as the default.
 
-A server may require mods; `steel` fetches them from the public registry by
-itself. If the connect fails saying a mod could not be got, the host has to
-update the server.
+The match itself is set from the game: a room may be on **Frontline** (the map
+is sectors, and you build only on the ones your side holds and supplies; see
+*When something does not happen*), and most rooms have a **time limit** (60
+minutes unless the host changed it). `steel lobby` shows neither, so ask the
+host when it matters.
+
+A server may require mods, or run a world (a scenario and its content);
+`steel` fetches mods from the public registry and checks the world by itself.
+If the connect fails saying a mod could not be got or the world could not be
+verified, the host has to update the server.
 
 You can steer the brain before the match starts (`steel auto --doctrine armored`
 in the lobby): it takes the seat with that steer at the whistle.
@@ -173,21 +177,25 @@ the brain runs, what it is doing, and how many units you hold by hand.
 
 ## Orders by hand
 
-In a match with engine capability modules, `steel show <id> --json` also exposes
-that unit's permitted module status, actions and choices. Use
-`steel content-action <units> <module> <action> [--choice id] [--target id] [--at x,y]`
-with the identifiers listed there. This uses the same server order boundary as
-the HUD: ownership, visibility, stock, cooldown and action requirements still
-apply. A refused action changes nothing for that unit. These controls exist only
-when the active content declares the corresponding capability.
-
 Anything the brain would do, you can do yourself, at any moment:
 
 - **Units:** `steel move <units> <x,y> [--attack]`, `steel attack <units> <target>`,
-  `hold`, `stop`, `board`, `unload`, `ability`. The unit is then yours: the brain
+  `hold`, `stop`, `route` (a standing patrol), `board`, `pickup`, `unload`,
+  `repair`, `assist`, `ability`, `hold-fire`. The unit is then yours: the brain
   leaves it alone until `steel attach <units>` (or `--all`) gives it back.
   `steel detach <units>` takes units without an order. `steel brief` counts what
   you hold (`hands`).
+- **Hold fire:** `steel hold-fire <units>` stops their automatic fire and
+  pursuit while they keep moving and working: slip past a turret line, set an
+  ambush, keep a scout unseen. `--off`, or any attack order, releases it;
+  `steel show` reads `holding fire`. It is a hand order like the rest.
+- **Priority targets:** `steel priority <id>` marks a visible enemy unit or
+  building, and every automatic weapon of your faction that can shoot it from
+  where it stands, the brain's included, picks it first. It is not an order to
+  any unit, so nothing leaves the brain's hands: it is how you point the brain's
+  guns at the artillery, the radar or the silo. Three marks at a time (a fourth
+  replaces the oldest); `steel priority` lists them, as `steel brief` does, and
+  `steel priority <id> --off` removes one, even out of sight.
 - **Buildings:** `steel build <building> --near <x,y>` (a radar, SAM sites, a
   turret where the brain did not put one), `steel upgrade <ids>`, `steel sell <ids>`.
   The brain crews your blueprints and counts them toward its own plans.
@@ -199,6 +207,12 @@ Anything the brain would do, you can do yourself, at any moment:
 
 `steel help <verb>` has every option. Units are ids like `12,15` or predicates
 like `--idle --def buggy --near 40,30:8`; places are `x,y` in tiles, `@<id>` or `@hq`.
+
+A match whose content declares capability modules gives some units actions of
+their own: `steel show <id>` lists each one's module, action and choices, and
+`steel content-action <units> <module> <action> [--choice id] [--target id] [--at x,y]`
+uses it. The server checks it like any order (ownership, sight, stock,
+cooldown); a refused action changes nothing.
 
 ## Direct control and scripts
 
@@ -224,12 +238,14 @@ export default {
 };
 ```
 
-- `steel script types > steel.d.ts` prints the whole API. Reading: `units`,
-  `buildings`, `enemies` (with `seen`, seconds since in sight), `deposits`,
-  `def`, `events` (the journal since the last run, losses with their killers),
-  `memory` (kept between runs), `brain`, `visible`, `ground`, `water`, `dist`,
-  `nearest`, `away`, `toward`. Orders: `move`, `attackMove`, `attack`, `stop`,
-  `hold`, `ability`, `build`, `produce`, `research`, `upgrade`, `sell`, `repair`,
+- `steel script types > steel.d.ts` prints the whole API. The seat: `time`,
+  `metal`, `free` (metal not yet promised), `income`, `power`, `pop`, `popCap`,
+  `hq`, `base`, `map`, `spawns`. Reading: `units`, `buildings`, `enemies` (with
+  `seen`, seconds since in sight), `deposits`, `def`, `events` (the journal
+  since the last run, losses with their killers), `memory` (kept between runs),
+  `brain`, `visible`, `explored`, `ground`, `water`, `dist`, `nearest`, `away`,
+  `toward`. Orders: `move`, `attackMove`, `attack`, `stop`, `hold`, `holdFire`,
+  `ability`, `build`, `produce`, `research`, `upgrade`, `sell`, `repair`,
   `board`, `unload`, `rally`, `arm`, `launch`, `attach`, `detach`, `steer`,
   and `log`.
 - `steel script try <file>` runs it once now and prints the orders it would
@@ -243,16 +259,36 @@ export default {
 - A unit a script orders is out of the brain's hands until `s.attach` gives it
   back, as with any hand order. `s.steer({ run: [...] })` hands the brain only
   the departments you name: take `army` and play it by script.
-- Limits: 100 ms a run; five failed runs in a row stop the script; the same
-  order to the same units is not sent again for 3 s; all scripts together send
-  30 orders a sim second. A script sees what your seat sees and nothing more,
-  and cannot touch files or the network.
+- Limits: 100 ms a run; five failed runs in a row stop the script; 60 orders a
+  run, the rest dropped; the same order to the same units is not sent again for
+  3 s; all scripts together send 30 orders a sim second. A script sees what your
+  seat sees and nothing more, and cannot touch files or the network.
 
 ## When something does not happen
 
 A refused order says so plainly: `refused, nothing was done: <order>: <why>`,
 with the figures (`not enough metal: 135 of its 180 is needed to start, 96 is
 free`). Nothing was queued or placed.
+
+Where a building may stand is the refusal most worth knowing:
+
+- **The build area.** A side builds on the ground its headquarters hold; only
+  an extractor or an offshore rig stands outside it (`too far from a friendly
+  headquarters`).
+- **Production slots.** Each headquarters opens a number of slots (three
+  unless the room says otherwise), and every factory, yard and airbase takes
+  one: `no free production slot: build another headquarters for more`. With
+  the HQ gone, none can be placed.
+- **Frontline.** In a room on Frontline the map is divided into sectors, and
+  everything, extractors too, goes up only on sectors your side holds and
+  supplies (`outside your supplied ground`); a headquarters may go on any sector
+  you hold. A sector is taken by armed ground units or ships standing at its
+  point (aircraft do not count), next to ground you already supply; it is
+  supplied while a chain of your sectors links it to a headquarters. The
+  victory points drain the reserve of whoever holds fewer: at zero that side is
+  out. The brain
+  sends squads to the points by itself; `steel` does not draw the sectors, so a
+  build there by hand goes near what you already hold.
 
 If the brain seems stuck, look at `steel auto` and `steel brief` first: `no enemy
 known yet: scouting` means it has found nothing to march on (scout for it, or give
@@ -286,6 +322,10 @@ nothing and say so: `keep` is a hand `build`, `mix` is `auto --favour`,
 - Keep going until `steel status` shows phase `ended` or you are eliminated. Then
   `steel disconnect` and report the result, how the match turned, and what you
   would change.
+- Under a time limit, the faction still standing with the most unspent metal
+  wins at the deadline, and equal balances across teams are a draw. In the last
+  minutes bank instead of spending: `steel auto --reserve 10000` (its most)
+  keeps the brain's hands off the balance.
 
 ## Quick reference
 
@@ -297,6 +337,8 @@ steel enemies | steel deposits | steel map | steel tech   # drill in
 steel defs <unit>                                     # a unit's stats and counters
 steel auto [on|off] [--run depts] [--doctrine D] [--favour u=w,...] [--posture push|hold|auto] [--target x,y|none] [--reserve M]
 steel move <units> <x,y> --attack | steel attack <units> <target>   # take units into your hands
+steel hold-fire <units> [--off]                       # no automatic fire until released
+steel priority [<id> [--off]]                         # mark an enemy for every gun of yours; nothing leaves the brain
 steel attach <units>|--all | steel detach <units>     # give them back; take them without an order
 steel direct                                          # the brain off: your orders and your scripts alone
 steel script run <file> | try <file> | stop <name> | log [name] | types   # your own code on the seat
