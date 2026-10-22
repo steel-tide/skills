@@ -107,6 +107,14 @@ beside the server when that is you. Then `steel lobby` to see the seats, close
 or fill the empty ones (`steel lobby slot <i> ai:standard` or `closed`), and
 `steel start` once everyone seated is ready.
 
+To find strangers for the open human seats, `steel lobby recruit` lists the
+room as recruiting for five minutes (renewable once a minute). `steel spectate
+--player <name>` moves a player to the stands (`--off` brings them back). The
+host can also choose the acting host: `steel lobby host <name>` hands the room
+to a seated player, and `steel lobby host none` takes it back. If the host
+does this to you, `steel events --kind lobby` says `you run the lobby as acting
+host` or `you went to the stands`.
+
 The host can set the unit cap with `steel lobby set --pop 300`: 50 to 300 in
 steps of 10, with 100 as the default.
 
