@@ -236,6 +236,7 @@ Unknown ordinary fields produce a warning. Each extension package defines and va
 | `id` | id | yes |  | the mod's id: lower case, letters, digits, `-`; also its folder in the registry |
 | `name` | text | yes |  | the name shown in the mod list |
 | `version` | string | yes |  | e.g. `1.0.0`; the game offers an update when the registry's is newer |
+| `hideFromListing` | boolean |  | false | hide from website and in-game discovery lists; the direct mod page and Add to Game remain available |
 | `author` | string |  |  | who made it |
 | `description` | text |  |  | one or two sentences for the list |
 | `homepage` | string |  |  | a link: a repository, a thread |
@@ -243,6 +244,7 @@ Unknown ordinary fields produce a warning. Each extension package defines and va
 | `minGame` | string |  |  | the oldest game version it is written for |
 | `defs` | def[] | yes |  | the units, buildings and upgrade levels; may be empty when terrains, music queues or menu backgrounds are supplied |
 | `factions` | faction[] |  |  | selectable factions, each with its own headquarters, starting builder and roster (format 2) |
+| `tech` | node[] |  |  | up to 128 research nodes of its own, researched at its own buildings (see below) |
 | `terrains` | terrain[] |  |  | up to 32 map-selected terrain variants; preserve their base terrain’s gameplay |
 | `sprites` | sheet[] |  |  | the sheets the defs draw with (see below) |
 | `music` | { tracks, menu, setup, battle } |  |  | custom BGM tracks and ordered menu, setup and battle queues (see below) |
@@ -279,6 +281,77 @@ The shared inspection model exposes private state and available actions only to 
 | `roster` | id[] |  |  | permitted definitions, including prerequisites and upgrades; defaults to all definitions in this mod |
 
 A faction is selected per seat in Conquest and Breakthrough. It changes the headquarters, starting builders and allowed build/production roster; teams and victory rules still belong to the match. The chooser is hidden with only Steel Tide available. The HQ must produce its builder, and that builder must rebuild its HQ. Both must belong to this mod. A starting HQ has no prerequisites; its builder may require only that HQ. Roster building prerequisites must also be in the roster. Format 1 mods continue to work unchanged.
+
+### A research node (`tech[]`)
+
+| field | type | required | default | meaning |
+| --- | --- | --- | --- | --- |
+| `id` | id | yes |  | unique node id, prefixed with the mod id and a dash; never a def id |
+| `name` | text | yes |  | the node’s name on its lab’s card |
+| `desc` | text |  |  | its tooltip line |
+| `lab` | id | yes |  | this mod’s building that researches it; the building gets a research queue |
+| `cost` | number 0–99999 | yes |  | metal, paid as the work is done |
+| `time` | number 0–3600 |  | 30 | seconds at full power |
+| `requires` | id[] |  |  | buildings that must stand, or nodes researched first (this mod’s or the game’s); it may be queued behind nodes on order |
+| `factions` | id[] |  |  | this mod’s factions that may research it; absent is any seat that can raise its lab |
+
+A mod may bring a tech tree of its own beside the game's. Each node is researched at one of the mod's buildings (`lab`), which gets a research queue like the War Lab's: its card offers the nodes it researches to the factions they name, each once the nodes in its `requires` are researched or already on order, and works the head of the queue at the grid's pace, billed as it goes. What is researched is kept for the match, whatever becomes of the building. A def or a rule's button is unlocked by naming the node in its own `requires`, beside any building it needs. A node carries no doctrine and no buff, and the War Lab never offers one; with the tech tree switched off for the match, a mod's nodes stay shut like the game's. A node id is prefixed with the mod id and never equals a def id. A faction whose roster needs a node must be one the node names, with the node's lab in its roster. The computer raises the lab when its roster needs one and climbs each lab's nodes in the order they are listed.
+
+```json
+{
+  "tech": [
+    {
+      "id": "mymod-plan-1",
+      "name": [
+        "First Plan",
+        "一期计划"
+      ],
+      "desc": [
+        "Opens the walkers.",
+        "解锁步行机甲。"
+      ],
+      "lab": "mymod-institute",
+      "cost": 1200,
+      "time": 30,
+      "factions": [
+        "mymod-red"
+      ]
+    },
+    {
+      "id": "mymod-plan-2",
+      "name": [
+        "Second Plan",
+        "二期计划"
+      ],
+      "lab": "mymod-institute",
+      "cost": 2400,
+      "time": 45,
+      "requires": [
+        "mymod-plan-1"
+      ],
+      "factions": [
+        "mymod-red"
+      ]
+    }
+  ],
+  "defs": [
+    {
+      "id": "mymod-walker",
+      "name": [
+        "Walker",
+        "步行机甲"
+      ],
+      "extends": "mbt",
+      "producedBy": [
+        "mymod-factory"
+      ],
+      "requires": [
+        "mymod-plan-1"
+      ]
+    }
+  ]
+}
+```
 
 ### A terrain variant (`terrains[]`)
 
@@ -367,9 +440,11 @@ The optional kit changes visible building forms, storeys, lot coverage, planting
 | `needsDeposit` | boolean | buildings only |  | must stand on a deposit |
 | `offshore` | boolean | buildings only |  | stands in open water on its own legs: every footprint tile sea, no shore needed; with needsDeposit, an ore field at sea, which only a builder on the water (the engineer boat) can reach |
 | `wall` | boolean | buildings only |  | a wall: one tile that joins its neighbours of the same def (its sheet is sixteen frames, one per set of neighbours: north 1, east 2, south 4, west 8), the last thing a gun shoots at, untouched by a pulse, and it falls without a charge |
-| `repairRange` | number 0–64 | buildings only |  | a repair aura, tiles |
-| `repairRate` | number 0–10000 | buildings only |  | hp per second per target |
-| `repairTargets` | integer 1–50 | buildings only |  | targets served at once |
+| `repairRange` | number 0–64 |  |  | a repair aura, tiles; a unit repairs ground and naval units, a building also repairs aircraft and buildings |
+| `repairAirRange` | number 0–64 |  | repairRange | repair reach for aircraft, tiles; does not change which targets the source can repair |
+| `repairNavalRange` | number 0–64 |  | repairRange | repair reach for ships, submarines and swimming amphibians, tiles |
+| `repairRate` | number 0–10000 |  |  | hp per second per target |
+| `repairTargets` | integer 1–50 |  |  | targets served at once |
 | `upgradeOf` | id | buildings only |  | the building this is the next level of; that one gains the upgrade button |
 | `upgradeCost` | number 0–99999 | buildings only | cost − the source's cost | with `upgradeOf`: the upgrade's price |
 | `upgradeTime` | number 0–3600 | buildings only | buildTime | with `upgradeOf`: seconds |
@@ -391,13 +466,14 @@ The optional kit changes visible building forms, storeys, lot coverage, planting
 | `landsForCargo` | boolean | units only |  | a cargo plane that touches down to load |
 | `cargoWeight` | number 0–50 | units only | pop | how much of a hold it takes |
 | `underwater` | boolean | units only |  | a submarine: seen only by sonar |
-| `sonar` | number 0–64 | units only |  | sonar range, tiles |
+| `sonar` | number 0–64 |  |  | sonar range, tiles: the one way to see a submarine below the surface, from a unit or a building |
 | `stealth` | number 0–64 | units only |  | seen only within this many tiles of an enemy |
 | `detect` | number 0–64 |  |  | reveals stealth within this many tiles |
 | `radar` | boolean |  |  | sees by radio: the sight circle ignores weather and the hour, and drops to 7 tiles when short of power |
 | `remoteVision` | boolean | units only |  | remote camera feed: hostile jamming blocks its sight within the field |
 | `jamRange` | number 0–64 | buildings only |  | electronic-warfare radius in tiles; requires full power, reveals its location, blocks hostile radar and remote vision, never visual sight or sonar |
-| `hovers` | boolean | units only |  | an aircraft that hovers instead of orbiting |
+| `hovers` | boolean | units only |  | an aircraft that hovers instead of orbiting; how it flies, not how it looks (`rotors`) |
+| `rotors` | rotor[] | units only | one over the centre if it hovers, else none; the base's, when its art is kept | the rotors and propellers drawn spinning over its art and heard while it flies, up to 8 (see below); `[]` is none, for an airship or a drone whose art turns its own blades |
 | `kamikaze` | boolean | units only |  | the unit is its own round: it never picks a target, and its one weapon flies it into what it is ordered at (the Hornet) |
 | `lowFlying` | boolean | units only |  | an aircraft at treetop height: machine guns and autocannons that fire on the ground reach it too (the helicopters and the Hornet) |
 | `limit` | integer 1–200 | units only |  | at most this many a faction at once, alive and queued together (the Hornet's 10) |
@@ -503,6 +579,20 @@ A decal is a picture laid on a def besides its body and its turret — a hatch, 
 | `arc` | number 0–180 |  | 180 | how far either side of `rest` it turns, degrees; 180 is all round. A ring that cannot bear on the target waits at the end of its arc, and the rings that can take the shots |
 
 A hull with more than one gun — a battleship's turrets fore and aft, a tank with a turret at each corner — names a ring for each, up to 8: the def's one `turretSprite` is drawn on every ring, and every ring is trained on the one target the unit is aiming at, as far round as its own `arc` of its `rest` bearing goes, so a gun the superstructure blocks waits at its stop while the others fire. A burst walks the rings that bear (the first shot from the first of them, the next from the next), and `muzzleOffset` is measured from the ring a shot leaves, so give a weapon of several guns a `burst` of that many. `x`/`y` are a point on the body's up-facing art, as a decal's are. A def with none has one ring, where its body sheet's `mount` puts it.
+
+### A rotor (`defs[].rotors[]`)
+
+| field | type | required | default | meaning |
+| --- | --- | --- | --- | --- |
+| `x` | number -256–256 |  | 0 | where its hub is on the body's up-facing art: px right of its pivot, in the body sheet's own px at its `fw`×`fh` size (the game scales it with the unit) |
+| `y` | number -256–256 |  | 0 | px down from the pivot, toward the tail |
+| `scale` | number 0.05–8 |  | 1 | drawn at this multiple of its blades' sheet: the game's rotor is 22 px across, a helicopter's |
+| `spin` | number -8–8 |  | 1 | the way it turns and how fast: 1 clockwise at the helicopter's rate, -1 against it, 2 twice as fast, 0 still |
+| `phase` | number -360–360 |  | 0 | its blades' lead on the others', degrees, so two rotors do not turn in step |
+| `prop` | boolean |  |  | a small propeller: heard as a buzz rather than a rotor's beat (the Hornet's four); an aircraft is heard so when all its blades are |
+| `sprite` | string |  | the game's rotor | the blades' sheet: one of this mod's `dec.<name>` sheets, drawn turning about its centre, its magenta in the side's colour |
+
+An aircraft's rotors and propellers are data, as its turret rings are: up to 8, each laid over the art and turned live — a helicopter's one, a transport's two in tandem, a quadcopter's four counter-rotating props — standing still in the def's tile, casting its shadow with the hull, and heard while the aircraft flies, as a rotor's beat or, when every one is a `prop`, a buzz. `x`/`y` are a point on the body's up-facing art, as a ring's are. Flight is `hovers` and nothing else: a def that hovers and names no `rotors` has the game's one rotor over its centre, `"rotors": []` is an aircraft with none (an airship, a drone whose own art turns its blades), and a fixed wing may name a propeller. A rotor of the mod's own is a `dec.<name>` sheet of the blades facing up, drawn turning about its centre and wearing the side's colour where it is magenta.
 
 ### A sheet (`sprites[]`)
 
@@ -915,7 +1005,7 @@ A mod may carry maps: files the game's Scenario Editor exports (`.steel-tide-map
 
 ## Units of measure
 
-- A tile is 32 world pixels. `speed` and projectile `speed` are world px/s; `range`, `minRange`, `vision`, `sonar`, `stealth`, `detect`, `repairRange` and `interceptRange` are tiles; `radius`, `body.r`, `body.len`, `splash`, `spread`, `muzzleOffset` are world px.
+- A tile is 32 world pixels. `speed` and projectile `speed` are world px/s; `range`, `minRange`, `vision`, `sonar`, `stealth`, `detect`, `repairRange`, `repairAirRange`, `repairNavalRange` and `interceptRange` are tiles; `radius`, `body.r`, `body.len`, `splash`, `spread`, `muzzleOffset` are world px.
 - Times are seconds: `buildTime`, `reload`, `burstDelay`, `upgradeTime`, `interceptReload`, `nukeTime`.
 - For scale: the Bison main battle tank is cost 280, hp 620, speed 60, radius 10, body `{ r: 13, len: 12 }`, a cannon of dmg 60 every 1.8 s at range 4.6; a scout car is cost 60, hp 150, speed 120; a war factory is 3×3 tiles, hp 1500, power −8.
 
@@ -951,7 +1041,7 @@ A mod may carry maps: files the game's Scenario Editor exports (`.steel-tide-map
 1. Fork https://github.com/steel-tide/mods, add your folder as `mods/<id>/` (the folder name is the mod's `id`), run `node tools/check.mjs mods/<id>`, open a pull request.
 2. A published mod carries at least one screenshot of it in play, named under `screenshots` in mod.json: 4:3 (1600×1200 is a good size), at least 640 px wide, PNG, JPEG or WebP under 2 MB, up to 8 of them. The game's Settings → Mods page and https://steelti.de/mods show them; the first is the mod's card. Take them in a match with the mod's units on screen (the console's `give` puts them there) and crop to 4:3.
 3. CI runs the same check on the whole registry: ids must be unique across every published mod, so prefix a generic word with your mod's id (`ironworks-bunker`, not `bunker`).
-4. Once merged, the index is rebuilt and the mod appears in the game's registry list and at https://steelti.de/mods, where its installs are counted. Bump `version` for every change; the game offers the update.
+4. Once merged, the index is rebuilt and the mod appears in the game's registry list and at https://steelti.de/mods, where its installs are counted. Set `hideFromListing: true` to omit it from both lists and search while keeping its direct https://steelti.de/mod/<id> page and Add to Game link. Bump `version` for every change; the game offers the update.
 
 ## Rules
 
