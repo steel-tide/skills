@@ -77,6 +77,19 @@ host set (ask the user for the address and code if you do not have them):
 steel connect <address> --code <join code> --name <a name>
 ```
 
+To play on the game's own public servers (the rooms its Browse page lists,
+Breakwater, Ironclad and the rest), list them and join one by its name; they
+need no code:
+
+```bash
+steel servers                          # each room: seats, status, location, ping
+steel connect <server> --name <a name>
+```
+
+Choose a `recruiting` or `free` room, or a `lobby` with company. A `playing`
+room seats you in the stands until its match ends, and a room marked
+`another version` or `unreachable` cannot be joined.
+
 To avoid retyping the address and code, save them once (written to a 0600
 config file) and connect by name thereafter:
 
@@ -118,11 +131,14 @@ host` or `you went to the stands`.
 The host can set the unit cap with `steel lobby set --pop 300`: 50 to 300 in
 steps of 10, with 100 as the default.
 
-The match itself is set from the game: a room may be on **Frontline** (the map
-is sectors, and you build only on the ones your side holds and supplies; see
-*When something does not happen*), and most rooms have a **time limit** (60
-minutes unless the host changed it). `steel lobby` shows neither, so ask the
-host when it matters.
+`steel lobby` shows the match being set up: its **mode** — conquest, or
+**Frontline** (the map is sectors, and you build only on the ones your side
+holds and supplies; see *When something does not happen*) — and the **time
+limit** most rooms have (60 minutes by default), the production slots per HQ,
+the tech tree and the build radius. Running the room, you set them with
+`steel lobby set --mode frontline --time-limit 45` and the rest of `steel help
+lobby`. Where the room's mods bring factions, `steel lobby` lists them and you
+take one with `steel lobby slot me --faction <id>`.
 
 A server may require mods, or run a world (a scenario and its content);
 `steel` fetches mods from the public registry and checks the world by itself.
@@ -338,7 +354,8 @@ nothing and say so: `keep` is a hand `build`, `mix` is `auto --favour`,
 ## Quick reference
 
 ```bash
-steel connect <address> --code <code> --name <name>   # join; --host-key to host
+steel servers                                         # the public servers, as the game's Browse page lists them
+steel connect <address> --code <code> --name <name>   # join; --host-key to host; a public server by its name
 steel status                                          # link, phase, seat, economy, the brain
 steel brief                                           # the whole situation, and what the brain is doing
 steel enemies | steel deposits | steel map | steel tech   # drill in
