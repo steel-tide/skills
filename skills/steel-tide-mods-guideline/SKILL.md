@@ -477,17 +477,19 @@ The optional kit changes visible building forms, storeys, lot coverage, planting
 | `rotors` | rotor[] | units only | one over the centre if it hovers, else none; the base's, when its art is kept | the rotors and propellers drawn spinning over its art and heard while it flies, up to 8 (see below); `[]` is none, for an airship or a drone whose art turns its own blades |
 | `kamikaze` | boolean | units only |  | the unit is its own round: it never picks a target, and its one weapon flies it into what it is ordered at (the Hornet) |
 | `lowFlying` | boolean | units only |  | an aircraft at treetop height: machine guns and autocannons that fire on the ground reach it too (the helicopters and the Hornet) |
+| `missileProof` | boolean | units only |  | no guided anti-air missile locks on it or harms it: a drone too small and slow for a seeker (the Hornet); the guns still reach it |
 | `limit` | integer 1–200 | units only |  | at most this many a faction at once, alive and queued together (the Hornet's 10) |
 | `altitude` | number 0–64 | units only | 12 | an aircraft's drawn height, px |
 | `fireOnMove` | boolean | units only |  | keeps shooting on a plain move |
-| `burnMult` | number 0–4 | units only | 1 | what fire on the ground does to it, as a multiplier (the Drake's 0.5) |
+| `burnMult` | number 0–4 |  | 1 | what fire on the ground does to it, as a multiplier (the Drake's 0.5, the Flame Thrower's 0) |
 | `trail` | tread \| tire \| wake \| none | units only | by domain | the mark it leaves, and the sound of it: treads and tyres are heard rolling; `none` for a unit on foot or a hovercraft, which neither cuts a rut nor is heard as an engine |
+| `onFoot` | boolean | units only |  | soldiers rather than a machine: it dies without a vehicle's blast, leaves no burnt hull and shows no headlights at night; its death looks and sounds like what a `destroyed` rule gives it. Pair it with `trail: "none"` |
 | `shadow` | boolean |  | true | the shadow the game casts for it: a unit's hull and turret silhouettes, a step to the south-east on the ground, further off in the air; a building's gun's, on its roof; `false` when the art brings its own, or none is wanted (a submarine casts none) |
 | `sprite` | string |  | this mod's u.<id> sheet, else the base's art | the body's atlas key: one of this mod's sheets, or a vanilla key to borrow its art |
 | `turretSprite` | string |  | this mod's tur.<id> sheet, else the base's (when its art is kept) | the rotating part's key, if any |
 | `turretMounts` | mount[] |  | one, where the body sheet's `mount` puts it (else the pivot); the base's, when its art is kept | the rings its turret stands on and fires from, up to 8: a hull with several guns names one each (a battleship's A, B and X), every one drawn with the one `turretSprite` and trained on the one target, as far round as its own arc goes (see below) |
 | `decals` | decal[] |  | the base's, when its art is kept | pictures laid on the hull and the turret besides their own sheets (see below), up to 12 |
-| `ability` | sprint \| afterburner \| smoke \| incendiary \| barrage \| countermeasures \| damageControl \| emergencyRepair | units only | the base's | its one active ability, a vanilla one by id (`sprint`, `smoke`, `countermeasures`…): the same click, clock and unlock as on the game's own units |
+| `ability` | sprint \| afterburner \| smoke \| incendiary \| barrage \| countermeasures \| flares \| damageControl \| emergencyRepair | units only | the base's | its one active ability, a vanilla one by id (`sprint`, `smoke`, `countermeasures`…): the same click, clock and unlock as on the game's own units |
 | `aliases` | string[] |  |  | other names the console's `give` accepts |
 | `aiWeight` | number 0–10 | units only | 0 | how readily the AI builds it: a Bison is 3, a scout car 1; 0 never |
 | `rules` | rule[] |  |  | its behaviour: rules that turn it into another form, spawn, heal, pay, buff or blow up, on an event, a condition, a clock or a button (see Behaviour), up to 24; never inherited through `extends` |
@@ -518,6 +520,7 @@ An `upgradeOf` def becomes upgrade-only (never placed directly): the named build
 | `splash` | number 0–500 |  |  | blast radius, world px |
 | `burst` | integer 1–32 |  |  | shots per burst |
 | `burstDelay` | number 0–5 |  |  | seconds between the shots of a burst |
+| `salvo` | boolean |  |  | the burst is fired a mount at a time: every muzzle of a mount (`bores`, `muzzlePoints`) at once, heard as one report, and the next mount (`turretMounts`) `burstDelay` later; a `burst` of all the mounts' muzzles fires each once |
 | `ammo` | integer 1–9999 |  |  | rounds carried, a burst one: dry, a unit goes home for more on its own (an airbase for an aircraft, a naval yard for a hull, a war factory for the rest) and a building refills where it stands; absent never runs dry |
 | `vsWarhead` | number 0–10 |  | 1 | against a warhead in flight, this share of what it does to an aircraft |
 | `homing` | boolean |  |  | the round tracks its target |
@@ -535,7 +538,11 @@ An `upgradeOf` def becomes upgrade-only (never placed directly): the named build
 | `fan` | number 0–1.5 |  |  | a `flame` jet: the half-angle it is sprayed across, radians |
 | `burn` | number 0–1000 |  |  | a `flame` jet: damage a second the fire it leaves does, to both sides |
 | `burnLife` | number 0–120 |  |  | a `flame` jet: seconds that fire keeps burning |
-| `sound` | string |  | by class | the firing sound: mg, autocannon, cannon, missile, flak, arty, rocket, torpedo, bomb, flame, or the key of one of this mod's `sounds` |
+| `spinUp` | number 0.05–10 |  |  | a rotary gun: seconds its barrels take to spin up from rest; it fires only once they are at speed, and with nothing to shoot they coast to a stop over 1.5 s |
+| `heatLimit` | number 0.5–120 |  |  | barrels that heat with fire: seconds of unbroken fire before it overheats, stops and cools; firing in bursts, the heat drains between them |
+| `coolTime` | number 0.1–60 |  | 2 | with `heatLimit`: seconds an overheated gun takes to cool before it fires again |
+| `overheat` | boolean |  |  | the reload is shown as the weapon overheating: named so, counted down, and the muzzle glows while it cools |
+| `sound` | string |  | by class | the firing sound: mg, gatling, autocannon, cannon, missile, flak, arty, rocket, torpedo, bomb, flame, or the key of one of this mod's `sounds` |
 | `look` | look |  |  | how it looks, in place of its class: its own round, flash, burst where it lands, or a beam (see Weapon looks) |
 
 The damage a weapon does is `dmg × the armour matrix cell for (cls, target armour)`, with `mult` overriding single cells. The matrix:
@@ -1028,7 +1035,7 @@ A mod may carry maps: files the game's Scenario Editor exports (`.steel-tide-map
 - ships: gunboat (T1, 130), mboat (T1, 280), frigate (T2, 700), destroyer (T2, 700), sub (T2, 480), btlship (T3, 1700), carrier (T3, 2200), seatrans (T1, 220), engboat (T1, 200), kraken (T3, 1000), moray (T3, 700)
 - amphibious units: gator (T2, 200)
 - aircraft: hornet (T2, 120), drone (T1, 40), fighter (T2, 380), heli (T2, 380), jet (T2, 450), mjet (T2, 520), bomber (T2, 1000), theli (T1, 280), c47 (T2, 650), gunship (T3, 1800), wraith (T3, 1400), cormorant (T3, 700)
-- buildings: hq (T1, 2500), hq2 (T2, 17500, upgrade level), extractor (T1, 120), extractor2 (T2, 310, upgrade level), extractor3 (T3, 810, upgrade level), platform (T1, 120), platform2 (T2, 310, upgrade level), platform3 (T3, 810, upgrade level), power (T1, 140), power2 (T2, 400, upgrade level), power3 (T3, 1100, upgrade level), factory (T1, 320), factory2 (T2, 740, upgrade level), factory3 (T3, 1640, upgrade level), airbase (T1, 380), airbase2 (T2, 830, upgrade level), airbase3 (T3, 1780, upgrade level), navyard (T1, 350), navyard2 (T2, 800, upgrade level), navyard3 (T3, 1750, upgrade level), mgturret (T1, 130), gatling (T2, 330, upgrade level), cannonturret (T1, 320), cannonturret2 (T2, 660, upgrade level), aaturret (T1, 400), samsite (T2, 1000, upgrade level), interceptor (T2, 450), interceptor2 (T3, 1100, upgrade level), sandbag (T1, 40), landmine (T1, 60), watermine (T1, 60), repairtower (T1, 360), radar (T2, 400), warlab (T1, 500), veil (T2, 600), reactor (T3, 1400), nukesilo (T3, 1800)
+- buildings: hq (T1, 2500), hq2 (T2, 17500, upgrade level), extractor (T1, 120), extractor2 (T2, 310, upgrade level), extractor3 (T3, 810, upgrade level), platform (T1, 120), platform2 (T2, 310, upgrade level), platform3 (T3, 810, upgrade level), power (T1, 140), power2 (T2, 400, upgrade level), power3 (T3, 1100, upgrade level), factory (T1, 320), factory2 (T2, 740, upgrade level), factory3 (T3, 1640, upgrade level), airbase (T1, 380), airbase2 (T2, 830, upgrade level), airbase3 (T3, 1780, upgrade level), navyard (T1, 350), navyard2 (T2, 800, upgrade level), navyard3 (T3, 1750, upgrade level), mgturret (T1, 130), gatling (T2, 330, upgrade level), cannonturret (T1, 320), cannonturret2 (T2, 660, upgrade level), flameturret (T1, 450), aaturret (T1, 400), samsite (T2, 1000, upgrade level), interceptor (T2, 450), interceptor2 (T3, 1100, upgrade level), sandbag (T1, 40), landmine (T1, 60), watermine (T1, 60), repairtower (T1, 360), radar (T2, 400), warlab (T1, 500), veil (T2, 600), reactor (T3, 1400), nukesilo (T3, 1800)
 
 ## Test
 
