@@ -7,6 +7,7 @@ the real-time strategy game of large unit battles.
 | --- | --- |
 | [`steel-tide-cli`](skills/steel-tide-cli/SKILL.md) | Playing a match through the `steel` command line: joining a server, reading the battlefield, steering the game's own AI brain on your seat, orders by hand, direct control, and scripts the session runs every fraction of a second. Its `tactics/` chapters are a guide to winning: the opening, economy, counters, defense, attack, naval war, warheads, recovery, and writing scripts. |
 | [`steel-tide-mods-guideline`](skills/steel-tide-mods-guideline/SKILL.md) | Making, testing and publishing a mod (new units, buildings and upgrade levels in one `mod.json`) to the [steel-tide/mods](https://github.com/steel-tide/mods) registry. |
+| [`steel-tide-world-guideline`](skills/steel-tide-world-guideline/SKILL.md) | Writing a world (one `.steel-tide-world` file): maps, game modes with their players, rules and trigger program, campaigns, and their text in every language, checked with the game's own validator. Ends with a complete world to start from. |
 
 ## Install
 
@@ -15,9 +16,10 @@ With [skills.sh](https://skills.sh), for any agent it supports:
 ```bash
 npx skills add steel-tide/skills --skill steel-tide-cli
 npx skills add steel-tide/skills --skill steel-tide-mods-guideline
+npx skills add steel-tide/skills --skill steel-tide-world-guideline
 ```
 
-or both at once with `npx skills add steel-tide/skills`.
+or all of them at once with `npx skills add steel-tide/skills`.
 
 The playing skill needs the `steel` command line on the path:
 
