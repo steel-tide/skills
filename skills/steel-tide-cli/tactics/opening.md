@@ -1,71 +1,82 @@
-# Opening: the first ten minutes
+# Opening: the first twelve minutes
 
 ## Before the whistle
 
-1. **Check the brain will take the seat.** `steel status` says `brain  takes the
-   seat when the match starts` in the lobby. A doctrine chosen now is the one it
-   opens with (`steel auto --doctrine armored`); leave it on `auto` when you do not
-   yet know the map.
-2. **Read the reach line** once the match is on. `steel brief` prints `reach  the
-   enemy is across water` when no land route exists. Across water the war is
-   ships, aircraft and lifts (see `naval.md`); on land it is tanks.
-3. **Learn the ground.** `steel map` for the shape, `steel deposits` for the ore.
-   The deposits between you and the enemy are the ones that will be fought over.
+1. **Read the ground.** `steel deposits` for the ore (the near ones are
+   `free`; the ones between you and the enemy will be fought over), `steel
+   map` for the shape. `steel brief` prints `reach  the enemy is across
+   water` when no land route exists: then the war is ships, aircraft and
+   lifts (see `naval.md`); on land it is tanks.
+2. **Know where the enemy starts.** On most maps the starts are at opposite
+   corners or sides; the far deposits in `steel deposits` point the way.
 
-## Let the brain open
+## The build order
 
-The brain's opening is the veteran's, and it is strong: most of the free ore
-taken in the first two or three minutes, the first factory at about three,
-extractor upgrades from the fourth, the War Lab and a doctrine by the fifth,
-Deep-Core extractors from the eighth, an army from the seventh and waves after.
-Do not fight it for the economy. Spend your attention on what it cannot see.
+The seat is yours from the first second, and the economy decides the match
+by minute ten. Do this in the first turn, then keep every engineer busy:
 
-## What it cannot do: see
+```bash
+steel build extractor --deposit <nearest> --by 3        # both engineers on ore at once,
+steel build extractor --deposit <next> --by 2           # the rest queued behind (--queue)
+steel build extractor --deposit <third> --by 3 --queue
+steel build extractor --deposit <fourth> --by 2 --queue
+steel build extractor --deposit <fifth> --by 3 --queue
+steel produce hq engineer -n 2                          # four engineers by 1:00
+steel tactic guard                                      # the standing rules, before the first unit
+steel tactic retreat --all --below 35
+```
 
-A Veteran sees the whole map, and every other AI and your brain see what their
-side sees. Against a Veteran that is the gap, and these close it (against the
-others they are simply good play):
+Then, as metal allows (the refusal gives the figures; a building starts at
+three quarters of its price):
 
-- **Find the enemy by minute five.** The brain sends a scout to every start it has
-  not seen, but a scout dies. `steel brief`'s `doing` line says `no enemy known
-  yet: scouting` until it finds a building. If it still says so at 4:00, send a
-  cheap unit yourself (`steel move <id> <their start>`), and give the brain a
-  `--target` when you know where they are.
-- **A radar early.** `steel auto --reserve 400`, then `steel build radar --near @hq`
-  (and `steel auto --reserve 0` once it is laid) by minute five or six, on the
-  side facing the enemy. It lifts the fog 24 tiles round it, through night and
-  rain: every turret and gun inside it then fires at its full reach at things
-  it could never see for itself, and the brain's memory fills with what it shows.
-  The brain would build one near minute seven; earlier pays.
-- **Artillery you cannot see.** A howitzer reaches 11 tiles and an MLRS 13 —
+| By    | Lay                                                                                                   |
+| ----- | ----------------------------------------------------------------------------------------------------- |
+| 1:30  | a power plant (`power 9/20` in the economy line means the base is starved: everything slows)          |
+| 2:30  | a factory; `steel rally factory <x,y> --join army` beside it, and `steel produce factory ltank -n 2 --repeat` |
+| 3:30  | a second power plant; `steel produce reserve 500` so the standing tanks leave money for buildings     |
+| 4:30  | the War Lab (`warlab`), then `steel research <doctrine>` at once: hammer, anvil or lightning           |
+| 5:30  | a cannon turret on the approach the enemy will come by; the factory upgraded (`steel upgrade factory`)  |
+| 6:30  | a radar on the enemy's side (`radar`): it lifts the fog 24 tiles round it, and every gun inside fires at full reach |
+| 7:00  | extractor upgrades, one at a time (`steel upgrade <id>`: an Advanced extractor mines twice a plain one); the standing order switched to `mbt -n 2` once the factory is upgraded, with `flak -n 1` beside it |
+| 9:00  | a second factory; the first outlying deposit claimed, with a turret on it                             |
+| 12:00 | twelve to sixteen units in `army`, a mix (tanks, a tank destroyer or two, flak, two howitzers), and `steel enemies` read |
+
+A check that fails is yours to fix now; nothing else will. Every turn: are
+the engineers idle (`crews` in the brief)? Is metal piling up (over 600 with
+nothing committed: spend it)? Is a queue empty (`steel produce`)?
+
+## What the first ten minutes are for
+
+- **Find the enemy without losing a unit.** A light tank sent into their base
+  dies to the HQ's gun; a scout is a unit that stops short. Send one to the
+  middle of the map (`steel move <id> <x,y>`) and read `steel enemies` when it
+  spots something; the radar does the rest.
+- **Lose nothing early.** Every unit alive at minute twelve is worth two
+  built then. The guard and the retreat rule keep the first tanks alive; an
+  outlying extractor without a turret is a unit-worth of metal given away.
+- **Artillery you cannot see.** A howitzer reaches 11 tiles and an MLRS 13,
   past the sight of most of what they shoot at, and a Veteran's guns fire at
   whatever they reach, seen or not. Units and buildings dying with nothing in
   sight means artillery, and the loss line names the gun (`lost mbt x3 to mlrs
-  x2`): look along the line to the enemy for open ground or water within 13
-  tiles, get vision there (radar, a fast unit), and send tanks into it by hand;
-  once the gun is in sight, `steel priority <id>` turns every gun of yours that
-  reaches it onto it. `--favour arty=2` gives you counter-battery, and a script
-  can pull a group out from under the shells in the second they land
-  (`scripts.md`).
-- **Know what they build.** `steel enemies` lists what you have seen. An airbase
-  or helicopters: `--favour flak=2,sam=2` and AA turrets. A radar plus a reactor:
-  warheads are coming (`warheads.md`), so SAM sites now.
+  x2 — out of sight: pull back past 12 tiles`): pull back that far, get vision
+  (the radar, a fast unit), then `steel priority <id>` on it and tanks at it
+  by hand. `steel tactic kite` on your own batteries keeps them out of theirs.
+- **Know what they build.** `steel enemies` lists what you have seen. An
+  airbase or helicopters: flak and SAM launchers on the standing orders, AA
+  turrets. A radar plus a reactor: warheads are coming (`warheads.md`), so SAM
+  sites now. Heavy tanks: tank destroyers and howitzers, not light tanks.
 
-## Timings to check
+## If the base falls behind
 
-| By    | Check                                                                                   |
-| ----- | --------------------------------------------------------------------------------------- |
-| 3:00  | four or more extractors, a factory going up; the scout on its way                       |
-| 5:00  | the enemy's base found; the War Lab up and a doctrine chosen (`steel tech`)              |
-| 6:00  | a radar standing on the enemy's side                                                    |
-| 8:00  | an army at home worth the enemy's first wave; turrets on the approach it will come by   |
-| 10:00 | Deep-Core extractors rising; you know their army's mix and have steered the answer      |
-
-A check that fails is yours to fix by hand: a `build`, a `produce`, a `move`.
+Against a Veteran the economy race is lost by minute eight if the table above
+slips. `steel auto --run economy,research` hands the base and the tech ladder
+to the brain — the veteran's own opening, under your fog — and keeps
+production and the army yours. Call it early rather than late; `steel direct`
+takes the base back when you want it.
 
 ## Across water the clock is slower
 
-When the enemy is across water, attacks arrive later and in smaller lifts, and the
-brain plays the island plan (a navy yard and an airbase first, engineer boats for
-the islets). Add coastal cannons and SAM sites early, because what comes is ships,
-aircraft and warheads.
+When the enemy is across water, attacks arrive later and in smaller lifts. A
+navy yard and an airbase come before the second factory, engineer boats claim
+the islets, and coastal cannons and SAM sites go up early, because what comes
+is ships, aircraft and warheads.

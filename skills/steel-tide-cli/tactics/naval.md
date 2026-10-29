@@ -2,17 +2,17 @@
 
 When `steel brief` says `reach  the enemy is across water`, ground armies stay
 home unless something carries them. What reaches the enemy: ships, aircraft, and
-ground units landed by transport, which the brain's army lifts over itself.
+ground units landed by transport (`steel pickup`, `steel unload`).
 
 ## Build
 
-- **A naval yard and an airbase early.** The brain plays the island plan here
-  (a navy yard and an airbase first, engineer boats for the islets);
-  `--doctrine naval` or `airpower` leans further. A yard you add by hand needs
-  a reserve first (`economy.md`). An engineer boat claims an islet: `steel build
-  extractor --deposit <id> --by <boat id>`.
-- **Turn the factory down.** Ground units at home are a garrison: `--favour
-  ltank=0.5,mbt=0.5`, and the metal goes into ships and aircraft.
+- **A naval yard and an airbase early**, before the second factory, with
+  engineer boats for the islets; a yard needs a reserve first (`economy.md`).
+  An engineer boat claims an islet: `steel build extractor --deposit <id> --by
+  <boat id>`.
+- **Turn the factory down.** Ground units at home are a garrison: one tank
+  on the factory's standing order, and the rest of the metal into ships and
+  aircraft (`steel produce navyyard destroyer -n 2 --repeat`).
 - **The T2 yard is the real fleet.** Destroyers (torpedoes, 1,300 hp) and
   Frigates (a SAM) are what hold the water; T1 gunboats die one by one to them.
 - **A second yard away from the enemy's side of the coast.** A missile sub
@@ -27,8 +27,8 @@ ground units landed by transport, which the brain's army lifts over itself.
   just offshore (`steel move --sea --armed <x,y>`, then `steel hold --sea
   --armed`) fights with the turrets behind it. Out alone, it is picked off.
 - **Answer submarines with torpedoes.** A missile sub cannot hit ships, only
-  land, so one Destroyer or Barracuda kills it for free (`--favour
-  destroyer=2,sub=2`). Nothing else you have touches it.
+  land, so one Destroyer or Barracuda kills it for free (put them on the
+  yard's standing order). Nothing else you have touches it.
 - **Scout the water before a strike.** A fleet sent blind at an enemy coast dies
   to what it cannot see, and it was your coast's only answer to their ships.
 - **Aircraft cross everything.** Helis and strike jets raid islet extractors;

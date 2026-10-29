@@ -23,21 +23,19 @@ the Missile Interrupter never does.
 - **Rebuild SAM sites first after any attack.** Missile subs and bombers kill
   them like any building; a base whose SAM sites fell is open to the next
   warhead.
-- **Lay them yourself.** The brain lays AA turrets against aircraft and
-  upgrades its guns only on spare metal, so do not wait for it: `steel auto
-  --reserve 1000`, `steel build aaturret --near <x,y>`, and `steel upgrade <id>`
-  once it stands (400, then 600 to make it a SAM site); `--reserve 0` after.
+- **Lay them before the first launch.** `steel produce reserve 1000`, `steel
+  build aaturret --near <x,y>`, and `steel upgrade <id>` once it stands (400,
+  then 600 to make it a SAM site); `steel produce reserve 0` after.
 - **Mark the silo.** `steel priority <id>` on a silo you have seen turns every
   gun of yours that can reach it onto it.
 
 ## Your own
 
-- **The brain opens the silo line itself** once its income can keep an army
-  standing beside it (some doctrines never do), and while it runs `nukes` it
-  fabricates a warhead whenever a silo has room and fires when a target is
-  worth it. To have one sooner: research `nuclearProgram`, set a reserve, and
-  lay the reactor and the silo by hand (`steel build nukesilo --near <x,y>`; it
-  needs the radar and the reactor standing); then `steel nuke queue <silo>`.
+- **The silo line is yours to open**: research `nuclearProgram` (its column
+  first), set a reserve, lay the reactor and the silo (`steel build nukesilo
+  --near <x,y>`; it needs the radar and the reactor standing), then `steel
+  nuke queue <silo>` and `steel nuke targets` when it is ready. Only an
+  income that can keep an army standing beside it affords one.
   Guard the silo with AA; a single bomber can kill an unguarded one.
 - `steel nuke targets` lists the best points to aim at: seldom a building's
   centre, usually the ground between several dear ones that one blast kills

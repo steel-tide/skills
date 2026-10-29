@@ -1,10 +1,10 @@
 # Scripts: what must happen faster than your turns
 
 A turn of yours takes tens of seconds of match time; a fight turns in one. The
-brain covers the gap with its own rules. A script covers it with yours. Write a
-script for anything that has to be answered within seconds and will come up
-again: a group under fire it cannot see, a line that must not stand idle, a
-department you would rather run your way.
+tactics cover the gap with the rules every player keeps. A script covers it
+with yours. Write a script for anything that has to be answered within seconds
+and will come up again: a group under fire it cannot see, a raid with a plan of
+its own, a department you would rather run by code.
 
 **Before writing one, check it is not a tactic already.** `steel tactic kite`
 (out of a gun's reach), `retreat` (home when hurt, back when mended), `guard`
@@ -86,8 +86,9 @@ rules: {
 },
 ```
 
-**Take a department.** The brain runs the rest; the script runs one of them its
-own way. Hand the department over once, keep state in `s.memory`.
+**Take a department.** With the brain on (`steel auto on`), the script can
+keep one department and leave it the rest. Hand the rest over once, keep state
+in `s.memory`.
 
 ```ts
 tick(s) {
@@ -103,8 +104,10 @@ tick(s) {
 
 - A script sees what your seat sees and nothing more: an enemy out of sight is
   a building remembered (`seen` > 0) or nothing at all.
-- A unit a script orders is out of the brain's hands until `s.attach(u)`. A
-  rule that orders every unit every run takes the whole army from the brain.
+- With the brain on, a unit a script orders is out of the brain's hands until
+  `s.attach(u)`; a rule that orders every unit every run takes the whole army
+  from it. A tactic and a script on the same unit send it two ways: give a
+  unit to one or the other.
 - An order to no units is an error; five failed runs in a row stop the script.
   Guard every list: `if (idle.length) ...`.
 - The same order to the same units is sent once in three seconds, and all
