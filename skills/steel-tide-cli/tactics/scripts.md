@@ -3,8 +3,15 @@
 A turn of yours takes tens of seconds of match time; a fight turns in one. The
 brain covers the gap with its own rules. A script covers it with yours. Write a
 script for anything that has to be answered within seconds and will come up
-again: a unit that must not stand where it is, a group under fire it cannot see,
-a line that must not stand idle, a department you would rather run your way.
+again: a group under fire it cannot see, a line that must not stand idle, a
+department you would rather run your way.
+
+**Before writing one, check it is not a tactic already.** `steel tactic kite`
+(out of a gun's reach), `retreat` (home when hurt, back when mended), `guard`
+(meet what comes inside the base) and `focus` (the weakest thing in reach) are
+the rules every match needs, kept by the session without a file; `steel group`
+names the units a script or a tactic is about, so no script carries ids.
+Write a script for what those do not say.
 
 ## The loop
 
@@ -22,8 +29,8 @@ a line that must not stand idle, a department you would rather run your way.
 
 ## Patterns
 
-**Keep a battery out of reach.** Artillery outranges what it shoots and dies to
-whatever reaches it.
+**Keep a battery out of reach** is `steel tactic kite --def arty,mlrs`; as a
+script, for a rule of your own shape:
 
 ```ts
 rules: {
@@ -31,6 +38,17 @@ rules: {
     const close = s.enemies({ near: u, within: 6, armed: true, seen: 0 });
     if (close.length) s.move(u, s.away(u, s.nearest(u, close)!, 5));
   },
+},
+```
+
+**A raid by name.** `steel group raid 104,105,107` first; the script never
+carries an id.
+
+```ts
+tick(s) {
+  const raid = s.group('raid').filter((u) => !u.aboard);
+  const target = s.nearest(s.base, s.enemies({ building: true, def: ['extractor2', 'extractor3'] }));
+  for (const u of raid) if (target && u.target !== target.id) s.attack(u, target);
 },
 ```
 

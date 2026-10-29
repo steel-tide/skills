@@ -54,7 +54,7 @@ chapter that matches what is happening; do not load them all.
 | a match is starting: the brain, the map, your first calls    | `tactics/opening.md`   |
 | income, expansions, upgrades, the War Lab                    | `tactics/economy.md`   |
 | the enemy fields something new: what beats it                | `tactics/counters.md`  |
-| the base is threatened or under attack                       | `tactics/defense.md`   |
+| the base is threatened or under attack (`!` lines, `steel threats`) | `tactics/defense.md`   |
 | planning or running an offensive                             | `tactics/attack.md`    |
 | the enemy is across water (`reach` says so)                  | `tactics/naval.md`     |
 | a radar, reactor or silo on either side                      | `tactics/warheads.md`  |
@@ -163,10 +163,20 @@ in the lobby): it takes the seat with that steer at the whistle.
    of the enemy's base — steer it, or do the thing yourself.
 3. **Steer or act.** `steel auto` changes what the brain does from its next
    second; a hand order does one thing now (below).
-4. **Wait.** `steel wait 45 --for contact,lost,attack` lets the match run (in
-   game-time seconds) and returns early when something happens. Its last line is
-   your economy now. This is your main source of news.
+4. **Wait.** `steel wait 45` lets the match run (in game-time seconds) and
+   returns the moment something that cannot wait happens: the base under
+   fire, a loss, a warhead, a faction out. Woken so, it ends on the **threats**
+   as they stand — who is coming, from where, how fast, what they have under
+   their guns, what of yours answers — so you can act without another look.
+   Its last line is your economy now. A fight it has already shown you does
+   not wake it again at every shot; a new place or a building lost does.
+   `--for produced,built` names your own kinds; `--for none` is a plain timer.
 5. Repeat, adapting as the enemy reveals itself.
+
+**You are never the last to know.** Every reply — an order, a list, even a
+refusal — opens with `!` lines for what fell since you last looked (`brief`,
+`wait`, `events`, `threats`): read them before the rest. `steel threats` is
+the alarm read in full at any time.
 
 ## Steering the brain: `steel auto`
 
@@ -209,6 +219,28 @@ Anything the brain would do, you can do yourself, at any moment:
   leaves it alone until `steel attach <units>` (or `--all`) gives it back.
   `steel detach <units>` takes units without an order. `steel brief` counts what
   you hold (`hands`).
+- **Groups:** `steel group raid 104,105,107` names a group (or by predicates:
+  `steel group raid --def drake --near 70,10:12`). Then `move raid 76,3`,
+  `attack raid 40`, `units raid`, `--group raid` anywhere, `tactic focus raid`,
+  and `s.group('raid')` in a script. The dead fall out by themselves. Never
+  hard-code ids in a script again.
+- **Routes:** `steel path <from> <to> [--air|--sea]` finds a way round every
+  enemy gun you know of (buildings seen, units seen in the last minute) and
+  says what it keeps clear of and what it has to pass under. `steel move <units>
+  <x,y> --safe` sends them along it, leg after leg. This is how a raid reaches
+  the extractors behind a turret wall, and how a lift skirts the SAM sites.
+- **Tactics:** the micro you would otherwise script, kept by the session four
+  times a second: `steel tactic guard` (what comes within 24 tiles of the base
+  is met by the units in your hands, who then go back where they stood),
+  `steel tactic kite --def arty,mlrs` (a battery a gun can reach steps out of
+  its reach, and back to the brain once clear), `steel tactic retreat --all
+  --below 30` (a hurt unit goes home, and is let go once mended), `steel tactic
+  focus raid` (the guns on the weakest thing in reach). `steel tactic` shows
+  what each holds; `steel tactic stop <id>|--all`. A tactic's order is a hand
+  order; on `--all` while the brain runs the army it takes only units already in
+  your hands — `--def`, a group or ids take units from the brain. **Set `tactic
+  guard` at the whistle**: it is what makes a raid you took by hand, or a seat
+  you play by hand, defend itself while you think.
 - **Hold fire:** `steel hold-fire <units>` stops their automatic fire and
   pursuit while they keep moving and working: slip past a turret line, set an
   ambush, keep a scout unseen. `--off`, or any attack order, releases it;
@@ -358,6 +390,7 @@ steel servers                                         # the public servers, as t
 steel connect <address> --code <code> --name <name>   # join; --host-key to host; a public server by its name
 steel status                                          # link, phase, seat, economy, the brain
 steel brief                                           # the whole situation, and what the brain is doing
+steel threats                                         # every enemy group in sight: worth, distance, heading, what it hits, what of yours answers
 steel enemies | steel deposits | steel map | steel tech   # drill in
 steel defs <unit>                                     # a unit's stats and counters
 steel auto [on|off] [--run depts] [--doctrine D] [--favour u=w,...] [--posture push|hold|auto] [--target x,y|none] [--reserve M]
@@ -365,11 +398,14 @@ steel move <units> <x,y> --attack | steel attack <units> <target>   # take units
 steel hold-fire <units> [--off]                       # no automatic fire until released
 steel priority [<id> [--off]]                         # mark an enemy for every gun of yours; nothing leaves the brain
 steel attach <units>|--all | steel detach <units>     # give them back; take them without an order
+steel group <name> <units> | move <name> <x,y>        # name a group; order it by name
+steel tactic guard | kite <units> | retreat <units> --below 30 | focus <units>   # standing micro the session keeps; tactic stop <id>|--all
+steel path <from> <to> [--air] | move <units> <x,y> --safe   # a route round known guns, and units sent along it
 steel direct                                          # the brain off: your orders and your scripts alone
 steel script run <file> | try <file> | stop <name> | log [name] | types   # your own code on the seat
 steel build <building> --near <x,y> | steel produce <factory> <unit> | steel research <node>
 steel nuke targets | steel nuke launch <silo> x,y     # warheads
-steel wait <seconds> [--for contact,lost,attack,nuke] # let it run, report back
+steel wait <seconds> [--for kinds|none]               # let it run; wakes on what cannot wait, ends on the threats
 steel disconnect                                      # leave
 steel lab --vs veteran [--script <file>] [--direct]   # your seat (and scripts) against the built-in AI, headless
 ```

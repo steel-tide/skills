@@ -26,7 +26,15 @@
   attacks win nothing.
 - **Hold what you took.** After a base falls, claim its deposits (`steel build
   extractor --deposit <id>`) and leave a turret; otherwise the enemy walks back in.
-- **Raids pay on soft targets.** Four helis sent by hand (`steel move <ids>
-  <x,y> --attack`) at lone extractors on islets or at the map's edge cost the
-  enemy income for little. Pull them back the moment they meet guns they cannot
-  beat, or write the raid as a script that runs from guns by itself.
+- **Raids pay on soft targets.** Name the raid (`steel group raid <ids>`),
+  send it round the guns you know of (`steel move raid <x,y> --safe`: the
+  route keeps clear of every turret and SAM site seen, and says what it must
+  pass under), and keep it alive without watching it: `steel tactic kite
+  raid` steps it out of any gun's reach, `steel tactic retreat raid --below
+  40` sends the hurt home, `steel tactic focus raid` kills one thing at a
+  time. Lone extractors on islets or at the map's edge cost the enemy income
+  for little.
+- **Flank with a route, not a guess.** `steel path @hq <behind their line>`
+  prints the legs round their turret wall and names what it cannot avoid;
+  `steel path ... --air` minds anti-air alone, for a lift or a wing. A route
+  that passes under a Bastion is a route to shell the Bastion first.
