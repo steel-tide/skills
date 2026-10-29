@@ -44,6 +44,6 @@ range and what it is strong and weak against; this table is what battles bore ou
   that matters most (the MLRS, the SAM launcher under your helis, the Frigate)
   turns every gun that can reach it onto it, the brain's included.
 - **Promotion matters.** Units that survive fights rank up (Veteran, Elite) and
-  hit harder. The brain calls a beaten wave home; a group of your own you pull
-  back by hand, or by a script that sends a unit home below 40% of its hit
-  points.
+  hit harder. The brain calls a beaten wave home; for a group of your own,
+  `steel tactic retreat <group> --below 40` sends each unit home before it
+  dies and lets it go once mended.

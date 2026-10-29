@@ -9,8 +9,8 @@ department you would rather run your way.
 **Before writing one, check it is not a tactic already.** `steel tactic kite`
 (out of a gun's reach), `retreat` (home when hurt, back when mended), `guard`
 (meet what comes inside the base) and `focus` (the weakest thing in reach) are
-the rules every match needs, kept by the session without a file; `steel group`
-names the units a script or a tactic is about, so no script carries ids.
+the rules every match needs, and need no file; `steel group` names the units a
+script or a tactic is about, so no script carries ids.
 Write a script for what those do not say.
 
 ## The loop
@@ -119,3 +119,5 @@ tick(s) {
   count down as you go.
 - A run has 100 ms; a loop that does not end is cut off, and the script starts
   over without its memory.
+- A script sees the match and nothing else: no files, no network, no clock but
+  the match's.
