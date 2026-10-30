@@ -259,10 +259,10 @@ A `defId` is one of the game's own below, or a def of a unit pack in `mods`. A w
 
 ## Check
 
-The game checks a world with its own validator, which ships as one file in the public mod registry. Run it after every change and fix every issue it lists (each has a path into the file):
+The game checks a world with its own validator, which ships as one file. Run it after every change and fix every issue it lists (each has a path into the file):
 
 ```bash
-curl -fsSLo steel-tide-world.mjs https://raw.githubusercontent.com/steel-tide/mods/main/tools/steel-tide-world.mjs
+curl -fsSLo steel-tide-world.mjs https://steelti.de/tools/steel-tide-world.mjs
 node --input-type=module -e "import { parseWorld } from './steel-tide-world.mjs'; import { readFileSync } from 'node:fs'; const r = parseWorld(readFileSync(process.argv[1], 'utf8')); console.log(r.ok ? 'ok' : r.errors.map(e => e.path + ': ' + e.message).join('\n')); process.exit(r.ok ? 0 : 1);" my-world.steel-tide-world
 ```
 

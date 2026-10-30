@@ -1,6 +1,6 @@
 ---
 name: steel-tide-mods-guideline
-description: Make, test and publish a mod for Steel Tide, the browser RTS — new units, buildings and upgrade levels in one mod.json. Use when asked to create or edit a Steel Tide mod, write its manifest or sprite sheets, validate it, or publish it to the steel-tide/mods registry.
+description: Make and test a mod for Steel Tide, the browser RTS — new units, buildings and upgrade levels in one mod.json. Use when asked to create or edit a Steel Tide mod, write its manifest or sprite sheets, or validate it.
 license: MIT
 ---
 # Making a Steel Tide mod: a brief for a coding agent
@@ -17,12 +17,12 @@ A folder:
 my-mod/
   mod.json          the manifest: the mod's identity, its defs, and the sheets they draw with
   sprites/*.png     optional art (a def without any is drawn as a plain placeholder)
-  screenshots/*.png the mod in play, 4:3 (the registry asks for at least one; see Publish)
+  screenshots/*.png optional: the mod in play, 4:3, for whoever you share it with
   maps/*.steel-tide-map  optional maps from the Scenario Editor, offered in the setup screens while the mod is on (see Maps)
   README.md         optional
 ```
 
-Published mods live in https://github.com/steel-tide/mods under `mods/<id>/`; the game lists that registry under Settings → Mods, and the website at https://steelti.de/mods.
+The game lists the mods of its registry under Settings → Mods, and the website at https://steelti.de/mods. The registry is not taking submissions: a mod you make plays from its folder, a zip of it or a server of your own (see Test).
 
 ## The manifest, minimal
 
@@ -263,7 +263,7 @@ Omit `capacity` for the ordinary limits, or set `capacity: "large"` in format 4 
 A format 4 pack may carry executable extension packages of its own (`extensionPackages`): versioned schema, simulation and optional presentation code, verified by SHA-256, that give the pack behaviour the closed rule vocabulary cannot say. Each package defines its own capability ids and the configuration they take; declare the ids the pack needs in `requiredCapabilities` and put each one's data under `extensions[id]` on the def or weapon it belongs to. A pack whose capability is missing or unsupported does not activate. The package's code runs as trusted code on every machine that installs the pack: its source, build, tests and documentation belong to the mod that ships it.
 A package may declare `assets: { resourceId: "relative/file.wav" }` (up to 256 entries, or 2048 with large capacity): recordings and pictures it loads by id, which travel with the folder, the packed file and a world like every other asset and count against the same total.
 
-Read the [extension framework guide](https://github.com/steel-tide/mods/blob/main/docs/EXTENSION-FRAMEWORK.md) for the package contract, its lifecycle, the SDK and the trust model; the gameplay a package adds is documented by the mod that supplies it.
+The gameplay a package adds is documented by the mod that supplies it.
 
 A def's module actions appear on its card; an action that names a `target` (`ground`, `own`, `ally` or `enemy`) is aimed on the map as a warhead launch is, the next click giving its point or the unit under it. The command line gives the same actions as `steel content-action <units> <module> <action> [--choice id] [--target id] [--at x,y]`. When porting a unit from another game, carry over only what the package can represent faithfully; leave the rest out and say so in the mod's description.
 
@@ -1036,20 +1036,19 @@ A mod may carry maps: files the game's Scenario Editor exports (`.steel-tide-map
 
 ## Test
 
-1. Validate: in a clone of the registry, `node tools/check.mjs path/to/my-mod` prints every error with its path into mod.json. (No clone? The game says the same things when the mod is loaded.)
+1. Validate with the game's own validator, which ships as one file; it prints every error with its path into mod.json, and the game says the same things when the mod is loaded:
+
+```bash
+curl -fsSLo steel-tide-mod.mjs https://steelti.de/tools/steel-tide-mod.mjs
+node --input-type=module -e "import { prepareContentSchema, parseMod } from './steel-tide-mod.mjs'; import { readFileSync } from 'node:fs'; const raw = readFileSync(process.argv[1], 'utf8'); await prepareContentSchema(raw, true); const r = parseMod(raw); console.log(r.ok ? 'ok' : r.errors.map(e => e.path + ': ' + e.message).join('\n')); process.exit(r.ok ? 0 : 1);" my-mod/mod.json
+```
+
 2. Load it in the game: Settings → Mods → *Open folder…* (Chrome keeps the folder open, so *Reload* re-reads your edits) or *Upload file…* (a zip of the folder, or a `.steel-tide-mod` file). Errors are listed on the spot; a loaded mod says how many units and buildings it added.
 3. Play: start a Conquest match. Your units are in the factory's production list from the level you gave them; buildings are in the engineer's build menu; an upgrade level is on its building's Upgrade button. The console (backquote) has `give <id>` for anything. Everyone in a network match needs the same packs.
 4. From a static server: `npx serve --cors path/to/my-mod` then open `https://play.steelti.de/?mod=http://localhost:3000/`. A data-only mod is read afresh at every boot; a pack with executable packages is installed once by hand, and changed package code needs a reload.
-
-## Publish
-
-1. Fork https://github.com/steel-tide/mods, add your folder as `mods/<id>/` (the folder name is the mod's `id`), run `node tools/check.mjs mods/<id>`, open a pull request.
-2. A published mod carries at least one screenshot of it in play, named under `screenshots` in mod.json: 4:3 (1600×1200 is a good size), at least 640 px wide, PNG, JPEG or WebP under 2 MB, up to 8 of them. The game's Settings → Mods page and https://steelti.de/mods show them; the first is the mod's card. Take them in a match with the mod's units on screen (the console's `give` puts them there) and crop to 4:3.
-3. CI runs the same check on the whole registry: ids must be unique across every published mod, so prefix a generic word with your mod's id (`ironworks-bunker`, not `bunker`).
-4. Once merged, the index is rebuilt and the mod appears in the game's registry list and at https://steelti.de/mods, where its installs are counted. Set `hideFromListing: true` to omit it from both lists and search while keeping its direct https://steelti.de/mod/<id> page and Add to Game link. Bump `version` for every change; the game offers the update.
 
 ## Rules
 
 - A mod adds definitions and assets; it does not change vanilla defs, art, rules or interface. Music and menu-background queues are explicit exceptions: they select the soundtrack and backdrop without overwriting built-in tracks or cuts. Do not try to override a vanilla id or key; the validator refuses it.
 - Keep it honest: a unit needs a counter. The armour matrix is how the game makes one; give a new weapon a class it belongs to rather than an override on every cell.
-- A mod is published under the licence its manifest names (default CC-BY-4.0). Only ship art you have the right to.
+- A mod is shared under the licence its manifest names (default CC-BY-4.0). Only ship art you have the right to.
