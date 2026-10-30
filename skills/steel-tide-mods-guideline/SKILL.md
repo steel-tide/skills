@@ -359,10 +359,12 @@ A mod may bring a tech tree of its own beside the game's. Each node is researche
 | `base` | grass \| sand \| road \| mud \| marsh \| snow \| rubble \| ice \| city | yes |  | the existing terrain whose movement, construction and combat behavior stays unchanged |
 | `texture` | string |  |  | flat terrain material: a ter.<mod id>-<name> sheet in this pack; city uses its city materials instead |
 | `city` | { roof, wall, window, lamp, roofTexture, wallTexture, groundTexture, signTexture, accent, accent2, architecture } |  |  | materials, lights and optional visual architecture; only with base city |
+| `color` | string |  |  | its paint on the minimap, the map cards and the catalogue thumbnails, #RRGGBB; absent is the base terrain’s colour |
+| `nature` | { wildlife, cover } |  |  | what lives on it: the base’s scrub and creatures unless said otherwise (see below) |
 
 Terrain variants add map-selected appearances without changing terrain numbers, movement, construction, cover or city destruction. Enabling a mod alone never repaints a vanilla map. A map opts in with `"terrainVariants": { "city": "my-mod-city" }`; the editor preserves these bindings in saves and exports. A map whose variant is missing or switched off shows its ordinary base terrain. A terrain-only pack uses `"defs": []`.
 
-Terrain materials are single-frame, square sheets named `ter.<mod id>-<name>`, declared in `sprites` with equal whole `fw` and `fh` (4–512; 128 recommended). `teams`, `stripBg`, `rotated`, `fitFootprint` and `freezeStatic` are false; their false defaults preserve the image. Anchors, mounts, animation states/regions and pivots are not supported. Keep flat materials opaque and seamless, without painted buildings, text, cast shadows or transparent cutouts. `city.signTexture` may instead contain sign artwork. A variant can reference only terrain sheets in its own pack.
+Terrain materials are single-frame, square sheets named `ter.<mod id>-<name>`, declared in `sprites` with equal whole `fw` and `fh` (4–512; 128 recommended). `teams`, `stripBg`, `rotated`, `fitFootprint` and `freezeStatic` are false; their false defaults preserve the image. Anchors, mounts, animation states/regions and pivots are not supported. Keep flat materials opaque and seamless, without painted buildings, text, cast shadows or transparent cutouts. `city.signTexture` may instead contain sign artwork. A variant can reference only terrain sheets in its own pack. A variant may name a `color` (#RRGGBB): its paint on the minimap, the map cards and the catalogue's thumbnails wherever a map binds it, so a plain riding the sand base need not read as sand there; absent, the base terrain's colour is used.
 
 #### City appearance (`terrains[].city`)
 
@@ -395,6 +397,15 @@ A city variant supplies colors, materials or a visual architecture kit while pre
 | `facade` | ribbon \| panel \| industrial |  | panel | wall structure: ribbon windows, panel cladding or industrial frames |
 
 The optional kit changes visible building forms, storeys, lot coverage, planting, rooftop equipment and facade treatment. It never changes terrain height, passability or combat. `forms` lists distinct supported forms. Storey bounds use the documented defaults when omitted and must satisfy `minStoreys <= maxStoreys`. The existing damage states still control collapsed buildings and extinguished signs.
+
+#### Nature (`terrains[].nature`)
+
+| field | type | required | default | meaning |
+| --- | --- | --- | --- | --- |
+| `wildlife` | boolean |  | true | the game’s creatures keep to this ground: the eagle soars over it and the fireflies rise from it at night; false is a dead world, and neither comes near |
+| `cover` | number 0–1 |  | 1 | how much of the base’s scrub stands on it, as a share: 0 is bare ground, 1 the base’s own bushes and tufts |
+
+What stands and lives on the variant's tiles besides its material, on every map that binds it: the base's scrub (grass's thickets, sand's tufts, snow's shrubs) scaled by `cover`, and the game's creatures — the eagle over the land, the fireflies over grass and marsh after dark — kept off it with `wildlife: false`. Decoration only: nothing in the sim reads it. A variant without `nature` keeps the base's.
 
 `signTexture` is a 4×4 atlas of 16 square signs in row-major order; a building’s deterministic seed selects one cell. Use equal `fw`/`fh` divisible by 4 (128 recommended), with dark unlit backing and bright lettering or symbols. Pixels whose strongest RGB channel exceeds 120 emit their own color at night. The image is one frame, not a horizontal 16-frame animation strip. Missing sign artwork uses procedural glyphs.
 
