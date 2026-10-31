@@ -242,10 +242,11 @@ Unknown ordinary fields produce a warning. Each extension package defines and va
 | `homepage` | string |  |  | a link: a repository, a thread |
 | `license` | string |  | CC-BY-4.0 | the mod's licence (SPDX id) |
 | `minGame` | string |  |  | the oldest game version it is written for |
-| `defs` | def[] | yes |  | the units, buildings and upgrade levels; may be empty when terrains, music queues or menu backgrounds are supplied |
+| `defs` | def[] | yes |  | the units, buildings and upgrade levels; may be empty when terrains, props, music queues or menu backgrounds are supplied |
 | `factions` | faction[] |  |  | selectable factions, each with its own headquarters, starting builder and roster (format 2) |
 | `tech` | node[] |  |  | up to 128 research nodes of its own, researched at its own buildings (see below) |
 | `terrains` | terrain[] |  |  | up to 32 map-selected terrain variants; preserve their base terrain’s gameplay |
+| `decor` | prop[] |  |  | up to 64 props a map may stand on its ground beside the game's poles, tents and palms (see below) |
 | `sprites` | sheet[] |  |  | the sheets the defs draw with (see below) |
 | `music` | { tracks, menu, setup, battle } |  |  | custom BGM tracks and ordered menu, setup and battle queues (see below) |
 | `menuBackground` | { cuts, queue } |  |  | ordered home-menu cut queue, mixing original scenes and this pack’s maps (see below) |
@@ -408,6 +409,24 @@ The optional kit changes visible building forms, storeys, lot coverage, planting
 What stands and lives on the variant's tiles besides its material, on every map that binds it: the base's scrub (grass's thickets, sand's tufts, snow's shrubs) scaled by `cover`, and the game's creatures — the eagle over the land, the fireflies over grass and marsh after dark — kept off it with `wildlife: false`. Decoration only: nothing in the sim reads it. A variant without `nature` keeps the base's.
 
 `signTexture` is a 4×4 atlas of 16 square signs in row-major order; a building’s deterministic seed selects one cell. Use equal `fw`/`fh` divisible by 4 (128 recommended), with dark unlit backing and bright lettering or symbols. Pixels whose strongest RGB channel exceeds 120 emit their own color at night. The image is one frame, not a horizontal 16-frame animation strip. Missing sign artwork uses procedural glyphs.
+
+### A prop (`decor[]`)
+
+| field | type | required | default | meaning |
+| --- | --- | --- | --- | --- |
+| `id` | id | yes |  | unique prop id, prefixed with the mod id and a dash, at most 38 characters; its drawing is the sheet `d.<id>` |
+| `name` | text | yes |  | the prop's name in the editor's palette |
+| `fw` | integer 1–8 |  | 1 | footprint width in tiles: every tile of it is an obstacle, as a building's is |
+| `fh` | integer 1–8 |  | 1 | footprint height in tiles |
+| `hp` | number 1–5000 | yes |  | hit points, taken off raw: only force fire and splash ever reach a prop (a pole has 20, a tent 90, a bunker 340) |
+| `color` | string |  | #625e56 | its paint on the minimap and the map cards, #RRGGBB |
+| `variants` | integer 1–8 |  | 1 | how many drawings it has: `d.<id>`, then `d.<id>2`, `d.<id>3`…; each item wears one, chosen by its tile |
+| `shadow` | number 0–48 |  | 0 | a contact shadow under its foot, the half-width in world px: for a tall thing on a trunk or legs whose art has no ground to stand on (a palm has 9) |
+| `water` | boolean |  | false | stands on deep water rather than on floor, and sinks rather than falls (a wreck) |
+
+A prop is something a map stands on its ground that belongs to nobody: the game's own are the telegraph poles, water towers, palms, tents, hangars, bunkers and the sunken freighter, and a mod's join them while it is on, in the editor's props palette after the game's. Every tile of its footprint is an obstacle: pathing, building and spawning refuse it as they refuse a building. No gun ever picks one; only force fire and splash take its `hp` off, and it comes down as a ruin over a scar, or, `water`, goes under and leaves a slick. Enabling a mod changes no map: a map names its props by kind (`"decor": [{ "kind": "my-mod-haystack", "x": 12, "y": 30 }]`, which the editor writes), and reads only where the mod is on, as a map standing the mod's units does; a save or a replay on it asks for the mod. A props-only pack uses `"defs": []`.
+
+A prop draws with the sheet `d.<id>` in `sprites`, and its variants with `d.<id>2`, `d.<id>3`…: each item wears one, picked by its tile, so a row of haystacks is not one haystack stamped out. A `d.` sheet must draw one of the mod's props. It is drawn as a building's is — never rotated, in its own colours (`teams` is off), sized to the footprint automatically (the footprint is the bottom `fw×32` by `fh×32` px of the frame; anything above stands over the ground behind it) — and a strip of `frames` plays at `fps`. A drawing no sheet gives is painted in code, as a crate on the footprint in the prop's `color`.
 
 ### A def (`defs[]`)
 
@@ -614,7 +633,7 @@ An aircraft's rotors and propellers are data, as its turret rings are: up to 8, 
 
 | field | type | required | default | meaning |
 | --- | --- | --- | --- | --- |
-| `key` | string | yes |  | `u.<id>` for a body, `tur.<id>` for a rotating part, `dec.<name>` for a decal, `prj.<name>` for a round and `fx.<name>` for an effect a weapon's look or a rule plays; `ter.<mod id>-<name>` for terrain materials; never a vanilla key |
+| `key` | string | yes |  | `u.<id>` for a body, `tur.<id>` for a rotating part, `dec.<name>` for a decal, `prj.<name>` for a round and `fx.<name>` for an effect a weapon's look or a rule plays; `ter.<mod id>-<name>` for terrain materials; `d.<prop id>` for a prop (`d.<prop id>2`… its variants); never a vanilla key |
 | `file` | string | yes |  | the image, relative to mod.json (PNG, WebP or JPEG) |
 | `frames` | integer 1–64 |  | 1 | animation frames, left to right in one strip |
 | `fw` | number 4–512 |  | the footprint (a building) or the image | in-game frame width, whole world px |
@@ -1017,7 +1036,7 @@ On a unit's body sheet, the frames played by what it is doing instead of one loo
 
 ## Maps
 
-A mod may carry maps: files the game's Scenario Editor exports (`.steel-tide-map`), named under `maps` in mod.json, up to 8 of them (16 in a large pack) and each under 512 KB. While the mod is on, the Conquest setup and the lobby offer them as cards beside the player's own map; choosing one plays it exactly as painted. A map may stand the mod's own units and buildings before the whistle: with the mod on, they are in the editor's forces palette, and the map reads on any game that has the mod (the registry checks it against the mod's own defs, not the vanilla roster). A scene laid this way — a base built up, a horde at the gate — is how a mod shows what it is without a word.
+A mod may carry maps: files the game's Scenario Editor exports (`.steel-tide-map`), named under `maps` in mod.json, up to 8 of them (16 in a large pack) and each under 512 KB. While the mod is on, the Conquest setup and the lobby offer them as cards beside the player's own map; choosing one plays it exactly as painted. A map may stand the mod's own units and buildings before the whistle: with the mod on, they are in the editor's forces palette, and the map reads on any game that has the mod (the registry checks it against the mod's own defs, not the vanilla roster). Its own props (`decor[]`) are in the editor's props palette the same way, and the ground can be dressed with them. A scene laid this way — a base built up, a horde at the gate — is how a mod shows what it is without a word.
 
 ## Units of measure
 
