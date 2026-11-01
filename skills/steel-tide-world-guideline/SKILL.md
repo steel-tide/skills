@@ -110,7 +110,7 @@ The unit or building an event is about is **the event entity**: `{ "event": true
 
 ### Queries
 
-A query picks living units and buildings; every field given must hold. `instance` (a placed or spawned instance id), `group`, `owner` (seat), `defId`, `prefix` (of the def id), `kind` ("unit" | "building"), `domain` ("ground", "air", "ship", "amphibious", "none" for buildings), `yard` (where it is made: "ground" | "air" | "ship"), `armed`, `hq`, `notMine` (not a mine), `complete` (not a building site), `outside` (not carried inside another), `region`, `variable` (the entity whose id the variable holds), `event: true` (the event entity), and `alive: false` to include the fallen.
+A query picks living units and buildings; every field given must hold. `instance` (a placed or spawned instance id), `group`, `owner` (seat), `defId`, `prefix` (of the def id), `kind` ("unit" | "building"), `domain` ("ground", "air", "ship", "sub", "amphibious", "none" for buildings), `yard` (where it is made: "ground" | "air" | "ship"), `armed`, `hq`, `notMine` (not a mine), `complete` (not a building site), `outside` (not carried inside another), `region`, `variable` (the entity whose id the variable holds), `event: true` (the event entity), and `alive: false` to include the fallen.
 
 ### Actions
 
