@@ -492,6 +492,7 @@ A prop draws with the sheet `d.<id>` in `sprites`, and its variants with `d.<id>
 | `transportDomain` | ground \| air | units only | ground | a transport: what its hold takes, ground units or aircraft; aircraft fly aboard and are launched ahead of the bow, as from the carrier's hangar |
 | `cargoReach` | number 0.5–4 | units only | 1 | a transport: how far its load and unload distances stretch, as a multiple of the default (the landing craft's 1.1, the Moray's 1.5); on a ship it widens the ground its ramp reaches too |
 | `landsForCargo` | boolean | units only |  | a cargo plane that touches down to load |
+| `unloadTime` | number 0.05–30 | units only | 0.6 | a transport: base seconds to put one passenger down, for one moving at speed 60; a faster one is out sooner, a slower one later, in proportion (the Condor's 7, the Pelican's 5) |
 | `cargoWeight` | number 0–50 | units only | pop | how much of a hold it takes |
 | `underwater` | boolean | units only |  | a submarine: seen only by sonar |
 | `sonar` | number 0–64 |  |  | sonar range, tiles: the one way to see a submarine below the surface, from a unit or a building |
@@ -569,13 +570,13 @@ An `upgradeOf` def becomes upgrade-only (never placed directly): the named build
 | `heatLimit` | number 0.5–120 |  |  | barrels that heat with fire: seconds of unbroken fire before it overheats, stops and cools; firing in bursts, the heat drains between them |
 | `coolTime` | number 0.1–60 |  | 2 | with `heatLimit`: seconds an overheated gun takes to cool before it fires again |
 | `overheat` | boolean |  |  | the reload is shown as the weapon overheating: named so, counted down, and the muzzle glows while it cools |
-| `sound` | string |  | by class | the firing sound: mg, gatling, autocannon, cannon, missile, flak, arty, rocket, torpedo, bomb, flame, or the key of one of this mod's `sounds` |
+| `sound` | string |  | by class | the firing sound: mg, hmg, gatling, autocannon, cannon, missile, flak, arty, rocket, torpedo, bomb, flame, or the key of one of this mod's `sounds` |
 | `look` | look |  |  | how it looks, in place of its class: its own round, flash, burst where it lands, or a beam (see Weapon looks) |
 
 The damage a weapon does is `dmg × the armour matrix cell for (cls, target armour)`, with `mult` overriding single cells. The matrix:
 
 ```
-mg          light ×1.5  medium ×0.8  heavy ×0.4  structure ×0.35  ship ×0.5  air ×0.7
+mg          light ×1.5  medium ×1  heavy ×0.4  structure ×0.35  ship ×0.5  air ×0.7
 autocannon  light ×1.5  medium ×1  heavy ×0.5  structure ×0.5  ship ×0.7  air ×0.35
 cannon      light ×0.6  medium ×1.3  heavy ×1  structure ×0.8  ship ×0.9
 at          light ×0.4  medium ×1.1  heavy ×1.8  structure ×0.7  ship ×0.75
