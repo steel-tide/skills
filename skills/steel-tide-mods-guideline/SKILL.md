@@ -553,6 +553,8 @@ An `upgradeOf` def becomes upgrade-only (never placed directly): the named build
 | `vsWarhead` | number 0–10 |  | 1 | against a warhead in flight, this share of what it does to an aircraft |
 | `homing` | boolean |  |  | the round tracks its target |
 | `interceptable` | boolean |  |  | point defence may shoot it down |
+| `rack` | integer 2–8 |  |  | rounds held ready and loaded one at a time, `reload` seconds each, where it stands: it fires whenever one is loaded, every round it has `burstDelay` apart, and its reload bar is a segment a round |
+| `interceptRounds` | integer 1–20 |  | 1 | point-defence rounds it takes to shoot one of its rounds down; a hit short of that strikes sparks and the round flies on |
 | `arc` | boolean |  |  | a ballistic arc (artillery) |
 | `turret` | boolean |  | true when the def has a turretSprite | fired from the rotating part |
 | `recoil` | number 0–10 |  |  | cosmetic barrel recoil stroke, art px; requires barrel regions on the turret art, changes no weapon statistic |
@@ -570,7 +572,7 @@ An `upgradeOf` def becomes upgrade-only (never placed directly): the named build
 | `heatLimit` | number 0.5–120 |  |  | barrels that heat with fire: seconds of unbroken fire before it overheats, stops and cools; firing in bursts, the heat drains between them |
 | `coolTime` | number 0.1–60 |  | 2 | with `heatLimit`: seconds an overheated gun takes to cool before it fires again |
 | `overheat` | boolean |  |  | the reload is shown as the weapon overheating: named so, counted down, and the muzzle glows while it cools |
-| `sound` | string |  | by class | the firing sound: mg, hmg, gatling, autocannon, cannon, missile, flak, arty, rocket, torpedo, bomb, flame, or the key of one of this mod's `sounds` |
+| `sound` | string |  | by class | the firing sound: mg, hmg, gatling, autocannon, cannon, missile, tbm, flak, arty, rocket, torpedo, bomb, flame, or the key of one of this mod's `sounds` |
 | `look` | look |  |  | how it looks, in place of its class: its own round, flash, burst where it lands, or a beam (see Weapon looks) |
 
 The damage a weapon does is `dmg × the armour matrix cell for (cls, target armour)`, with `mult` overriding single cells. The matrix:
