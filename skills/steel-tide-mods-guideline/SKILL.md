@@ -506,7 +506,7 @@ A prop draws with the sheet `d.<id>` in `sprites`, and its variants with `d.<id>
 | `kamikaze` | boolean | units only |  | the unit is its own round: it never picks a target, and its one weapon flies it into what it is ordered at (the Hornet) |
 | `lowFlying` | boolean | units only |  | an aircraft at treetop height: machine guns and autocannons that fire on the ground reach it too (the helicopters and the Hornet) |
 | `missileProof` | boolean | units only |  | no guided anti-air missile locks on it or harms it: a drone too small and slow for a seeker (the Hornet); the guns still reach it |
-| `limit` | integer 1–200 | units only |  | at most this many a faction at once, alive and queued together (the Hornet's 10) |
+| `limit` | integer 1–200 | units only |  | at most this many a faction in the field at once (the Hornet's 10); a line still takes more, and holds each finished one at the door until one is spent |
 | `altitude` | number 0–64 | units only | 12 | an aircraft's drawn height, px |
 | `fireOnMove` | boolean | units only |  | keeps shooting on a plain move |
 | `burnMult` | number 0–4 |  | 1 | what fire on the ground does to it, as a multiplier (the Drake's 0.5, the Flame Thrower's 0) |
