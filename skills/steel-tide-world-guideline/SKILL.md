@@ -79,6 +79,7 @@ const terrain = Buffer.from(bytes).toString("base64");
 | `briefing` | `{ "titleKey"?, "bodyKey"?, "dateKey"?, "locationKey"?, "image"? }`: the plate read before the match |
 | `roster` | { seat: def id[] }: what that seat may build and train; a seat left out has the normal roster |
 | `buildRegions` | { seat: region id[] }: where that seat may build |
+| `hqRegions` | { seat: region id[] }: where that seat may raise a headquarters past its headquarters' ground (a landing's far shore) |
 | `guide` | tutorial steps; leave them to the World Editor's Tutorial module |
 
 ## Text
