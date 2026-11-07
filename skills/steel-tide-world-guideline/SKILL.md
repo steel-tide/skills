@@ -72,7 +72,7 @@ const terrain = Buffer.from(bytes).toString("base64");
 | `regions` | rectangles in tiles: `{ "id", "name"?, "x", "y", "w", "h", "marker"?: { "color" } }`; `marker` outlines it for the players |
 | `routes` | paths in tiles: `{ "id", "name"?, "points": [{ "x", "y" }…], "attack"? }` |
 | `variables` | { name: number \| string \| bool }: the program's state and its starting values |
-| `objectives` | `{ "id", "textKey", "params"?: Expr[], "team"?, "visible"? }`: the objective list; `{0}` in the text takes the first param |
+| `objectives` | `{ "id", "textKey", "params"?: Expr[], "team"?, "visible"?, "mark"?: { "label", "x", "y" }, "area"?, "bonus"? }`: the objective list; `{0}` in the text takes the first param. `mark` puts it on the minimap and battle map as a lettered point (one or two characters, tiles) in a row under the economy bar instead of the list; `area` (a region id) outlines that region on the minimap and battle map while the objective is up and not done; `bonus` keeps an optional extra off the field, in the pause menu's brief |
 | `counters` | `{ "id", "textKey", "value": Expr, "team"? }`: numbers on the HUD, recomputed every tick |
 | `triggers` | the program (below) |
 | `actions` | { name: Action[] }: functions, run by `call` |
@@ -139,6 +139,13 @@ A query picks living units and buildings; every field given must hold. `instance
 | `sound` | `sound`, `x`?, `y`? | plays a game sound |
 | `launch` | `id`, `from`: Ref, `target`: Ref, `weapon`: def id, `damage`: Expr, `speed`? | fires one round; its fate is read with `{ "projectile": id, … }` and the `projectile` event |
 | `result` | `win`: bool, `winnerTeam`? | ends the match: `win` is the human players' result |
+| `narrate` | `textKey`, `params`?: Expr[], `seconds`?, `voice`? | a narrator's line under the picture, for `seconds` or as long as it takes to read; the screen alone sees it |
+| `camera` | `mode`: "pan" | "cut" | "follow" | "release", `x`?, `y`? (tiles), `zoom`?, `query`?, `seconds`?, `ease`?: "linear" | "smooth" | moves the player's camera: a glide over `seconds`, a cut, held on the first match of `query`, or handed back |
+| `cinematic` | `id`, `seconds`, `actions`, `skippable`? | a scripted passage: bars over the picture, the interface away and the player's input held for `seconds` while `actions` run; skipping runs the rest of it unseen, so the field ends where it would have |
+| `music` | `scene`?, `track`?, `seconds`?, `silence`?, `release`? | the soundtrack: holds a scene, plays a game music file by name, holds silence, or hands control back to the field |
+| `transfer` | `query`, `owner` | every match passes to that seat where it stands, as damaged as it is (each becomes a new entity: instance names and groups follow it) |
+| `terrain` | `region`, `to`: terrain, `from`?: terrain[] | the region's tiles (those of `from`, or all) become `to`, one of "deepWater", "water", "sand", "grass", "forest", "mountain", "road", "mud", "marsh", "snow", "rubble", "lava", "cliffNorth", "cliffEast", "cliffSouth", "cliffWest", "city", "shallows", "ice", "bridge" |
+| `campaign` | `variable`, `value`: Expr | sets a variable to carry through the campaign (list it in `carryVariables`) |
 
 ### Expressions
 
@@ -157,6 +164,8 @@ A value anywhere an Expr is asked for: a number, string or boolean, or one of
 | `{ "playerName": seat }` | the seat's player, named in a line's params |
 | `{ "projectile": launch id, "fate": "flying" \| "landed" \| "downed" }` | whether a launched round is in that state |
 | `{ "groupOutcome": group, "outcome": "destroyed" \| "escaped" \| "removed" }` | how many of the group ended that way |
+| `{ "decor": { "region", "kinds"?: prop id[], "razed"?: bool } }` | how many of the map's props stand in the region, or with `razed`, how many have come down since the match began |
+| `{ "campaign": name, "default": value }` | a carried variable: as this mission set it, else as it arrived, else `default` |
 | `{ "op": name, "args": Expr[] }` | `add` sum, `sub` first minus second, `mul` product, `div` first over second (0 when dividing by 0), `mod` remainder (0 by 0), `min` smallest, `max` largest, `floor` round down, `ceil` round up, `eq` equal, `ne` not equal, `lt` <, `lte` ≤, `gt` >, `gte` ≥, `all` every argument true, `any` some argument true, `not` not the first |
 
 ### Patterns
@@ -170,7 +179,7 @@ A value anywhere an Expr is asked for: a number, string or boolean, or one of
 
 ## Campaigns
 
-`{ "id", "name", "scenarios": game mode id[], "description"?, "carryVariables"?: name[], "branches"?: [{ "from", "to", "variable", "equals" }] }`: the modes are played in order; carried variables keep their values into the next; a branch picks the next mission by a variable's value at the end of `from`.
+`{ "id", "name", "scenarios": game mode id[], "description"?, "carryVariables"?: name[], "branches"?: [{ "from", "to", "variable", "equals" }], "endings"?: [{ "id", "condition": Expr, "epilogue": text key, "track"? }] }`: the modes are played in order; carried variables keep their values into the next; a branch picks the next mission by a variable's value at the end of `from`; the first ending whose condition holds when the last mission is won is the campaign's.
 
 ## Units and buildings
 
