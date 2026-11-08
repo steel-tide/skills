@@ -278,7 +278,7 @@ A def's module actions appear on its card; an action that names a `target` (`gro
 | `builder` | id | yes |  | this mod’s ground or amphibious builder; the HQ must produce it and it must rebuild the HQ |
 | `roster` | id[] |  |  | permitted definitions, including prerequisites and upgrades; defaults to all definitions in this mod |
 
-A faction is selected per seat in Conquest and Breakthrough. It changes the headquarters, starting builders and allowed build/production roster; teams and victory rules still belong to the match. The chooser is hidden with only Steel Tide available. The HQ must produce its builder, and that builder must rebuild its HQ. Both must belong to this mod. A starting HQ has no prerequisites; its builder may require only that HQ. Roster building prerequisites must also be in the roster. Format 1 mods continue to work unchanged.
+A faction is selected per seat. It changes the headquarters, starting builders and allowed build/production roster; teams and victory rules still belong to the match. The chooser is hidden with only Steel Tide available. The HQ must produce its builder, and that builder must rebuild its HQ. Both must belong to this mod. A starting HQ has no prerequisites; its builder may require only that HQ. Roster building prerequisites must also be in the roster. Format 1 mods continue to work unchanged.
 
 ### A research node (`tech[]`)
 
@@ -700,7 +700,7 @@ Supply a nonempty queue to replace the home-menu reel. It repeats in listed orde
 | `tracks` | track[] |  |  | up to 32 custom recordings (64 with large capacity), each with an id and file |
 | `menu` | track id[] |  |  | ordered repeating queue for menus; also used for setup unless setup is supplied. Omitted keeps the previous queue; [] is silence |
 | `setup` | track id[] |  |  | optional separate queue for match setup |
-| `battle` | track id[] |  |  | ordered repeating queue during battle. Omitted keeps the previous queue; [] is silence. Built-in IDs: menu, glassline-drive, setup, cold-front, victory, defeat, battle-1, battle-2, assembly-gears, disciplined-unease, methodical-calm, iron-standard, danger-close, dead-reckoning, zero-hour, stand-to, stand-down |
+| `battle` | track id[] |  |  | ordered repeating queue during battle. Omitted keeps the previous queue; [] is silence. Built-in IDs: menu, glassline-drive, setup, cold-front, victory, defeat, action-stations, weapons-hold, danger-close, steel-rain, hold-the-line, breach, final-count, last-reserve, stand-down |
 
 | field | type | required | default | meaning |
 | --- | --- | --- | --- | --- |
@@ -709,7 +709,7 @@ Supply a nonempty queue to replace the home-menu reel. It repeats in listed orde
 
 Each supplied queue replaces that slot, plays in listed order and repeats, keeping the normal gaps, music volume and pause behavior. Keep built-in IDs to mix original tracks with your own; use only your own IDs for a complete replacement. Omitted queues keep the previous selection; an empty queue silences the slot. The last active pack supplying a slot wins. Disabling it restores the preceding pack or the original shuffle. A music-only pack uses `defs: []`. Victory and defeat remain unchanged. Tracks travel with the other mod assets, within the existing total asset limit.
 
-Built-in music IDs by original slot: menu: menu, glassline-drive; setup: setup, cold-front; victory: victory; defeat: defeat; battle: battle-1, battle-2, assembly-gears, disciplined-unease, methodical-calm, iron-standard, danger-close, dead-reckoning, zero-hour, stand-to, stand-down. Any of these IDs may appear in a custom queue; an unshipped file is skipped.
+Built-in music IDs by original slot: menu: menu, glassline-drive; setup: setup, cold-front; victory: victory; defeat: defeat; battle: action-stations, weapons-hold, danger-close, steel-rain, hold-the-line, breach, final-count, last-reserve, stand-down. Any of these IDs may appear in a custom queue; an unshipped file is skipped.
 
 ### A sound (`sounds[]`)
 

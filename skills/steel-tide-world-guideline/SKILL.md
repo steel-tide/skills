@@ -62,7 +62,7 @@ const terrain = Buffer.from(bytes).toString("base64");
 | `id`, `name` | its id and its name in the library |
 | `map` | a key of `maps` |
 | `cfg` | the match: `{ "mode": "sandbox", "mapKey": "custom", "seed": n, "fog": bool, "popCap": n, "startMetal": n, "players": Seat[] }`, and optionally `weather` ("clear", "rain", "snow", "random"), `tech` (research on), `buildRadius` (false lets players build anywhere), `productionSlotsPerHQ` |
-| `cfg.players` | one to eight seats: `{ "isHuman": bool, "team": 0–7, "difficulty"?: "relaxed" \| "standard" \| "seasoned" \| "veteran", "scripted"?: true, "spawn"?: n }`. A human seat is a person; otherwise the computer plays it, unless `scripted`: then it has no mind of its own and does only what triggers make it do (the right seat for waves and set pieces). `spawn` picks a map spawn other than its own index |
+| `cfg.players` | one to eight seats: `{ "isHuman": bool, "team": 0–7, "difficulty"?: "relaxed" \| "standard" \| "seasoned" \| "veteran", "scripted"?: true, "bystander"?: true, "spawn"?: n }`. A human seat is a person; otherwise the computer plays it, unless `scripted`: then it has no mind of its own and does only what triggers make it do (the right seat for waves and set pieces). `bystander` (with `scripted`, on a team of its own) is civilians: nobody's foe on the interface, never defeated; give its units `untargetable` so no gun picks them out. `spawn` picks a map spawn other than its own index |
 | `resultPolicy` | "conquest": the last side with a base wins, and triggers may end it earlier. "scripted": only a `result` action ends the match |
 | `defaultBases` | every seat opens with a headquarters and engineers on its spawn |
 | `mapUnits` | the units and buildings painted on the map join their seats (default true) |
@@ -73,7 +73,7 @@ const terrain = Buffer.from(bytes).toString("base64");
 | `routes` | paths in tiles: `{ "id", "name"?, "points": [{ "x", "y" }…], "attack"? }` |
 | `variables` | { name: number \| string \| bool }: the program's state and its starting values |
 | `objectives` | `{ "id", "textKey", "params"?: Expr[], "team"?, "visible"?, "mark"?: { "label", "x", "y" }, "area"?, "bonus"? }`: the objective list; `{0}` in the text takes the first param. `mark` puts it on the minimap and battle map as a lettered point (one or two characters, tiles) in a row under the economy bar instead of the list; `area` (a region id) outlines that region on the minimap and battle map while the objective is up and not done; `bonus` keeps an optional extra off the field, in the pause menu's brief |
-| `counters` | `{ "id", "textKey", "value": Expr, "team"? }`: numbers on the HUD, recomputed every tick |
+| `counters` | `{ "id", "textKey", "value": Expr, "team"? }`: numbers on the HUD, recomputed every tick, each a banner over the field (gone while it reads 0) and never an objective; `{clock:0}` in its text reads the value as a time on the match clock (mm:ss); a count of a task belongs on the task's own line (`params` and `<textKey>.count`) |
 | `triggers` | the program (below) |
 | `actions` | { name: Action[] }: functions, run by `call` |
 | `briefing` | `{ "titleKey"?, "bodyKey"?, "dateKey"?, "locationKey"?, "image"? }`: the plate read before the match |
@@ -256,7 +256,7 @@ A `defId` is one of the game's own below, or a def of a unit pack in `mods`. A w
 | `salamander` | unit | Salamander Thermobaric Mortar |
 | `sam` | unit | Hawk SAM Launcher |
 | `samsite` | building | SAM Site |
-| `sandbag` | building | Sandbags |
+| `sandbag` | building | Barrier |
 | `scorpion` | unit | Scorpion Ballistic Missile Launcher |
 | `seatrans` | unit | Landing Craft |
 | `sub` | unit | Barracuda Submarine |
