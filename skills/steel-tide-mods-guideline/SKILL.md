@@ -6,7 +6,7 @@ license: MIT
 # Making a Steel Tide mod: a brief for a coding agent
 
 You are helping make a mod for Steel Tide (https://steelti.de), a browser real-time strategy game.
-A mod adds units, buildings and upgrade levels, and gives them behaviour of their own — forms they turn into, units they spawn, buttons on their cards, planes they carry, weapons that look like nothing in the game (see Behaviour). It cannot change the game's rules, its interface, or an existing unit or building: it only adds, and everything it adds is switched off with it.
+A mod adds units, buildings and upgrade levels, and gives them behaviour of their own — forms they turn into, units they spawn, buttons on their cards, planes they carry, weapons that look like nothing in the game (see Behaviour). Its data cannot change the game's rules, its interface, or an existing unit or building: it only adds, and everything it adds is switched off with it. Rules and interface of a mod's own — a second resource, a planning mode — are code it ships (see Extension packages), which runs only in a match played with the mod.
 Read this whole brief once, then work from the tables. When in doubt, prefer the smallest mod that plays.
 
 ## What a mod is
@@ -262,6 +262,7 @@ Omit `capacity` for the ordinary limits, or set `capacity: "large"` in format 4 
 ### Extension packages (format 4)
 
 A format 4 pack may carry executable extension packages of its own (`extensionPackages`): versioned schema, simulation and optional presentation code, verified by SHA-256, that give the pack behaviour the closed rule vocabulary cannot say. Each package defines its own capability ids and the configuration they take; declare the ids the pack needs in `requiredCapabilities` and put each one's data under `extensions[id]` on the def or weapon it belongs to. A pack whose capability is missing or unsupported does not activate. The package's code runs as trusted code on every machine that installs the pack: its source, build, tests and documentation belong to the mod that ships it.
+A package declaring host `api: 3` may be a utility: rules over the whole match rather than behaviour of the pack's own units, and such a pack needs no def at all (`defs: []` with a required capability). Its module composes a definition for each unit or building as the match reads it (`effectiveDef`, which the power grid and the mines read too), wraps the bills the match pays and its production lines (`wrapSpend`, `wrapProduction`), the built-in commander (`wrapAI`), refuses a def to the lines and the builders (`allowBuild`), and keeps state by seat: rows beside the economy (`playerStatus`), actions on the card whatever is selected (`playerActions`) and orders that name no unit (`playerOrder`, a `contentAction` with no ids). Its presentation may extend the interface (`Hud`) as well as the renderer and the input. `mods/coal-power` and `mods/blueprints` in the registry are worked examples.
 A package may declare `assets: { resourceId: "relative/file.wav" }` (up to 256 entries, or 2048 with large capacity): recordings and pictures it loads by id, which travel with the folder, the packed file and a world like every other asset and count against the same total.
 
 The gameplay a package adds is documented by the mod that supplies it.
@@ -467,7 +468,7 @@ A prop draws with the sheet `d.<id>` in `sprites`, and its variants with `d.<id>
 | `needsDeposit` | boolean | buildings only |  | must stand on a deposit |
 | `offshore` | boolean | buildings only |  | stands in open water on its own legs: every footprint tile sea, no shore needed; with needsDeposit, an ore field at sea, which only a builder on the water (the engineer boat) can reach |
 | `wall` | boolean | buildings only |  | a wall: one tile that joins its neighbours of the same def (its sheet is sixteen frames, one per set of neighbours: north 1, east 2, south 4, west 8), the last thing a gun shoots at, untouched by a pulse, and it falls without a charge |
-| `repairRange` | number 0–64 |  |  | a repair aura, tiles; a unit repairs ground and naval units, a building also repairs aircraft and buildings |
+| `repairRange` | number 0–64 |  |  | a repair aura, tiles; a unit repairs ground and naval units (a ship only naval units), a building also repairs aircraft and buildings |
 | `repairAirRange` | number 0–64 |  | repairRange | repair reach for aircraft, tiles; does not change which targets the source can repair |
 | `repairNavalRange` | number 0–64 |  | repairRange | repair reach for ships, submarines and swimming amphibians, tiles |
 | `repairRate` | number 0–10000 |  |  | hp per second per target |
@@ -700,7 +701,7 @@ Supply a nonempty queue to replace the home-menu reel. It repeats in listed orde
 | `tracks` | track[] |  |  | up to 32 custom recordings (64 with large capacity), each with an id and file |
 | `menu` | track id[] |  |  | ordered repeating queue for menus; also used for setup unless setup is supplied. Omitted keeps the previous queue; [] is silence |
 | `setup` | track id[] |  |  | optional separate queue for match setup |
-| `battle` | track id[] |  |  | ordered repeating queue during battle. Omitted keeps the previous queue; [] is silence. Built-in IDs: menu, glassline-drive, setup, cold-front, victory, defeat, action-stations, weapons-hold, danger-close, steel-rain, hold-the-line, breach, final-count, last-reserve, stand-down |
+| `battle` | track id[] |  |  | ordered repeating queue during battle. Omitted keeps the previous queue; [] is silence. Built-in IDs: menu, glassline-drive, setup, cold-front, victory, defeat, action-stations, weapons-hold, contact-front, danger-close, steel-rain, hold-the-line, breach, final-count, last-reserve, stand-down |
 
 | field | type | required | default | meaning |
 | --- | --- | --- | --- | --- |
@@ -709,7 +710,7 @@ Supply a nonempty queue to replace the home-menu reel. It repeats in listed orde
 
 Each supplied queue replaces that slot, plays in listed order and repeats, keeping the normal gaps, music volume and pause behavior. Keep built-in IDs to mix original tracks with your own; use only your own IDs for a complete replacement. Omitted queues keep the previous selection; an empty queue silences the slot. The last active pack supplying a slot wins. Disabling it restores the preceding pack or the original shuffle. A music-only pack uses `defs: []`. Victory and defeat remain unchanged. Tracks travel with the other mod assets, within the existing total asset limit.
 
-Built-in music IDs by original slot: menu: menu, glassline-drive; setup: setup, cold-front; victory: victory; defeat: defeat; battle: action-stations, weapons-hold, danger-close, steel-rain, hold-the-line, breach, final-count, last-reserve, stand-down. Any of these IDs may appear in a custom queue; an unshipped file is skipped.
+Built-in music IDs by original slot: menu: menu, glassline-drive; setup: setup, cold-front; victory: victory; defeat: defeat; battle: action-stations, weapons-hold, contact-front, danger-close, steel-rain, hold-the-line, breach, final-count, last-reserve, stand-down. Any of these IDs may appear in a custom queue; an unshipped file is skipped.
 
 ### A sound (`sounds[]`)
 
@@ -1061,8 +1062,8 @@ A mod may carry maps: files the game's Scenario Editor exports (`.steel-tide-map
 
 ## The vanilla roster (ids you may `extends`, name in `producedBy`/`builtBy`/`requires`/`upgradeOf`, or borrow art from)
 
-- ground units: engineer (T1, 150), buggy (T1, 60), ltank (T1, 120), mbt (T2, 280), htank (T3, 900), td (T2, 320), flak (T1, 170), sam (T2, 400), arty (T2, 420), mlrs (T3, 760), radarcar (T3, 480), salamander (T3, 800), bulwark (T3, 650), drake (T2, 400), hercules (T2, 350), scorpion (T3, 1100)
-- ships: gunboat (T1, 130), mboat (T1, 280), frigate (T2, 700), destroyer (T2, 700), sub (T2, 480), btlship (T3, 1700), carrier (T3, 2200), seatrans (T1, 220), engboat (T1, 200), kraken (T3, 1000), moray (T3, 700)
+- ground units: engineer (T1, 150), buggy (T1, 60), ltank (T1, 120), mbt (T2, 280), htank (T3, 900), td (T2, 320), flak (T1, 170), sam (T2, 400), arty (T2, 420), mlrs (T3, 760), radarcar (T3, 480), salamander (T3, 800), bulwark (T3, 650), sentinel (T3, 600), drake (T2, 400), hercules (T2, 350), scorpion (T3, 1100)
+- ships: gunboat (T1, 130), mboat (T1, 280), frigate (T2, 700), destroyer (T2, 700), sub (T2, 480), btlship (T3, 1700), carrier (T3, 2200), seatrans (T1, 220), engboat (T1, 200), replship (T2, 600), kraken (T3, 1000), moray (T3, 700)
 - amphibious units: gator (T2, 200)
 - aircraft: hornet (T2, 120), drone (T1, 40), fighter (T2, 380), heli (T2, 380), jet (T2, 450), mjet (T2, 520), bomber (T2, 1000), theli (T1, 280), c47 (T2, 650), gunship (T3, 1800), wraith (T3, 1400), cormorant (T3, 700)
 - buildings: hq (T1, 2500), hq2 (T2, 17500, upgrade level), extractor (T1, 120), extractor2 (T2, 310, upgrade level), extractor3 (T3, 810, upgrade level), platform (T1, 120), platform2 (T2, 310, upgrade level), platform3 (T3, 810, upgrade level), power (T1, 140), power2 (T2, 400, upgrade level), power3 (T3, 1100, upgrade level), factory (T1, 320), factory2 (T2, 740, upgrade level), factory3 (T3, 1640, upgrade level), airbase (T1, 380), airbase2 (T2, 830, upgrade level), airbase3 (T3, 1780, upgrade level), navyard (T1, 350), navyard2 (T2, 800, upgrade level), navyard3 (T3, 1750, upgrade level), mgturret (T1, 130), gatling (T2, 330, upgrade level), cannonturret (T1, 320), cannonturret2 (T2, 660, upgrade level), flameturret (T1, 450), aaturret (T1, 400), samsite (T2, 1000, upgrade level), interceptor (T2, 450), interceptor2 (T3, 1100, upgrade level), sandbag (T1, 40), landmine (T1, 60), watermine (T1, 60), repairtower (T1, 360), radar (T2, 400), warlab (T1, 500), veil (T2, 600), reactor (T3, 1400), nukesilo (T3, 1800)
@@ -1082,6 +1083,6 @@ node --input-type=module -e "import { prepareContentSchema, parseMod } from './s
 
 ## Rules
 
-- A mod adds definitions and assets; it does not change vanilla defs, art, rules or interface. Music and menu-background queues are explicit exceptions: they select the soundtrack and backdrop without overwriting built-in tracks or cuts. Do not try to override a vanilla id or key; the validator refuses it.
+- A mod's data adds definitions and assets; it does not change vanilla defs, art, rules or interface. Rules and interface of its own are extension package code, in force only in a match played with the mod. Music and menu-background queues are explicit exceptions: they select the soundtrack and backdrop without overwriting built-in tracks or cuts. Do not try to override a vanilla id or key; the validator refuses it.
 - Keep it honest: a unit needs a counter. The armour matrix is how the game makes one; give a new weapon a class it belongs to rather than an override on every cell.
 - A mod is shared under the licence its manifest names (default CC-BY-4.0). Only ship art you have the right to.

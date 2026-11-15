@@ -253,12 +253,14 @@ A `defId` is one of the game's own below, or a def of a unit pack in `mods`. A w
 | `radarcar` | unit | Owl Radar Car |
 | `reactor` | building | Nuclear Reactor |
 | `repairtower` | building | Repair Tower |
+| `replship` | unit | Tide Replenishment Ship |
 | `salamander` | unit | Salamander Thermobaric Mortar |
 | `sam` | unit | Hawk SAM Launcher |
 | `samsite` | building | SAM Site |
 | `sandbag` | building | Barrier |
 | `scorpion` | unit | Scorpion Ballistic Missile Launcher |
 | `seatrans` | unit | Landing Craft |
+| `sentinel` | unit | Sentinel Laser Vehicle |
 | `sub` | unit | Barracuda Submarine |
 | `td` | unit | Viper Tank Destroyer |
 | `theli` | unit | Pelican Transport Helicopter |
