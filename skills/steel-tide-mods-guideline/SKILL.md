@@ -19,6 +19,7 @@ my-mod/
   sprites/*.png     optional art (a def without any is drawn as a plain placeholder)
   screenshots/*.png optional: the mod in play, 4:3, for whoever you share it with
   maps/*.steel-tide-map  optional maps from the Scenario Editor, offered in the setup screens while the mod is on (see Maps)
+  LISTING.md        optional: the mod's page, what a player reads before installing it (see Listing)
   README.md         optional
 ```
 
@@ -510,6 +511,7 @@ A prop draws with the sheet `d.<id>` in `sprites`, and its variants with `d.<id>
 | `missileProof` | boolean | units only |  | no guided anti-air missile locks on it or harms it: a drone too small and slow for a seeker (the Hornet); the guns still reach it |
 | `limit` | integer 1–200 | units only |  | at most this many a faction in the field at once (the Hornet's 10); a line still takes more, and holds each finished one at the door until one is spent |
 | `altitude` | number 0–64 | units only | 12 | an aircraft's drawn height, px |
+| `airframe` | number 1–400 | units only | four times `radius` | an aircraft's drawn size in flight, world px: the longest it measures across its art, span or length. In the sky it pushes only its own kind of its own side at its own height, by a circle a quarter that wide |
 | `fireOnMove` | boolean | units only |  | keeps shooting on a plain move |
 | `burnMult` | number 0–4 |  | 1 | what fire on the ground does to it, as a multiplier (the Drake's 0.5, the Flame Thrower's 0) |
 | `trail` | tread \| tire \| wake \| none | units only | by domain | the mark it leaves, and the sound of it: treads and tyres are heard rolling; `none` for a unit on foot or a hovercraft, which neither cuts a rut nor is heard as an engine |
@@ -519,7 +521,7 @@ A prop draws with the sheet `d.<id>` in `sprites`, and its variants with `d.<id>
 | `turretSprite` | string |  | this mod's tur.<id> sheet, else the base's (when its art is kept) | the rotating part's key, if any |
 | `turretMounts` | mount[] |  | one, where the body sheet's `mount` puts it (else the pivot); the base's, when its art is kept | the rings its turret stands on and fires from, up to 8: a hull with several guns names one each (a battleship's A, B and X), every one drawn with the one `turretSprite` and trained on the one target, as far round as its own arc goes (see below) |
 | `decals` | decal[] |  | the base's, when its art is kept | pictures laid on the hull and the turret besides their own sheets (see below), up to 12 |
-| `ability` | sprint \| afterburner \| smoke \| incendiary \| barrage \| countermeasures \| flares \| damageControl \| emergencyRepair | units only | the base's | its one active ability, a vanilla one by id (`sprint`, `smoke`, `countermeasures`…): the same click, clock and unlock as on the game's own units |
+| `ability` | sprint \| afterburner \| smoke \| incendiary \| barrage \| countermeasures \| flares \| selfProtection \| damageControl \| emergencyRepair | units only | the base's | its one active ability, a vanilla one by id (`sprint`, `smoke`, `countermeasures`…): the same click, clock and unlock as on the game's own units |
 | `aliases` | string[] |  |  | other names the console's `give` accepts |
 | `aiWeight` | number 0–10 | units only | 0 | how readily the AI builds it: a Bison is 3, a scout car 1; 0 never |
 | `rules` | rule[] |  |  | its behaviour: rules that turn it into another form, spawn, heal, pay, buff or blow up, on an event, a condition, a clock or a button (see Behaviour), up to 24; never inherited through `extends` |
@@ -555,7 +557,7 @@ An `upgradeOf` def becomes upgrade-only (never placed directly): the named build
 | `vsWarhead` | number 0–10 |  | 1 | against a warhead in flight, this share of what it does to an aircraft |
 | `homing` | boolean |  |  | the round tracks its target |
 | `interceptable` | boolean |  |  | point defence may shoot it down |
-| `rack` | integer 2–8 |  |  | rounds held ready and loaded one at a time, `reload` seconds each, where it stands: it fires whenever one is loaded, every round it has `burstDelay` apart, and its reload bar is a segment a round |
+| `rack` | integer 2–8 |  |  | rounds held ready and loaded one at a time, `reload` seconds each, where it stands: it fires whenever one is loaded, every round it has `burstDelay` apart, and its reload bar is a segment a round; with a `burst`, each is a pod of that many rounds, loaded as one and fired together from its own muzzles, and at a target only the pods it needs go |
 | `interceptRounds` | integer 1–20 |  | 1 | point-defence rounds it takes to shoot one of its rounds down; a hit short of that strikes sparks and the round flies on |
 | `arc` | boolean |  |  | a ballistic arc (artillery) |
 | `turret` | boolean |  | true when the def has a turretSprite | fired from the rotating part |
@@ -564,7 +566,7 @@ An `upgradeOf` def becomes upgrade-only (never placed directly): the named build
 | `muzzleOffset` | number 0–200 |  |  | pivot to muzzle, world px; a unit's art is drawn 1.5625×, so measure on the sheet and multiply |
 | `bores` | integer 1–8 |  | 1 | barrels, fired one after another |
 | `boreSpacing` | number 0–60 |  |  | gap between adjacent barrels, world px |
-| `muzzlePoints` | string |  |  | explicit muzzle positions, fired in list order: 1–8 `{ forward, lateral }` points in world px from the firing pivot (forward along the bore, lateral to its right; either may be negative); replaces `muzzleOffset`, `bores` and `boreSpacing` |
+| `muzzlePoints` | string |  |  | explicit muzzle positions, fired in list order: 1–16 `{ forward, lateral }` points in world px from the firing pivot (forward along the bore, lateral to its right; either may be negative); replaces `muzzleOffset`, `bores` and `boreSpacing`; a `rack` of pods takes them a pod at a time, the first pod the first `burst` of them |
 | `spread` | number 0–200 |  |  | inaccuracy at full range, world px |
 | `friendlyFire` | boolean |  |  | the blast hurts your own side too |
 | `fan` | number 0–1.5 |  |  | a `flame` jet: the half-angle it is sprayed across, radians |
@@ -1043,6 +1045,23 @@ On a unit's body sheet, the frames played by what it is doing instead of one loo
 
 A mod may carry maps: files the game's Scenario Editor exports (`.steel-tide-map`), named under `maps` in mod.json, up to 8 of them (16 in a large pack) and each under 512 KB. While the mod is on, the Conquest setup and the lobby offer them as cards beside the player's own map; choosing one plays it exactly as painted. A map may stand the mod's own units and buildings before the whistle: with the mod on, they are in the editor's forces palette, and the map reads on any game that has the mod (the registry checks it against the mod's own defs, not the vanilla roster). Its own props (`decor[]`) are in the editor's props palette the same way, and the ground can be dressed with them. A scene laid this way — a base built up, a horde at the gate — is how a mod shows what it is without a word.
 
+## Listing
+
+A mod may carry a listing: `LISTING.md` beside mod.json, the long account of it that its page on the website and its plate in the game show under its screenshots, where `description` is the one line for a list. Say what the mod adds and how it plays — its sides, the kind of units and buildings, what is its own about them, the maps it carries — and credit whoever made what it ports. Write it in English; `LISTING.zh.md` and `LISTING.ko.md` carry the other languages the game speaks, each read in place of the English by players of that language. A listing is at most 6000 characters in each language.
+
+It takes a small part of Markdown, so the file reads the same on a repository's preview, on the website and in the game:
+
+- paragraphs, a blank line between them;
+- `## Heading` and `### Heading` (the page's title is the mod's name, so never `#`);
+- lists, `- item` and `1. item`, one level;
+- `**bold**` and `*italic*`; `\*` for an asterisk itself.
+
+Nothing else: no links (`homepage` is the mod's link), pictures (`screenshots` are its pictures), HTML, code, quotes, tables or rules. Whatever else is written shows as the plain text it is; the game lists it among a mod's warnings when the mod is loaded from its folder, and the registry refuses it. The same validator reads it:
+
+```bash
+node --input-type=module -e "import { parseListing } from './steel-tide-mod.mjs'; import { readFileSync } from 'node:fs'; const r = parseListing(readFileSync(process.argv[1], 'utf8')); console.log(r.issues.length ? r.issues.map(i => 'line ' + i.line + ': ' + i.message).join('\n') : 'ok'); process.exit(r.issues.length ? 1 : 0);" my-mod/LISTING.md
+```
+
 ## Units of measure
 
 - A tile is 32 world pixels. `speed` and projectile `speed` are world px/s; `range`, `minRange`, `vision`, `sonar`, `stealth`, `detect`, `repairRange`, `repairAirRange`, `repairNavalRange` and `interceptRange` are tiles; `radius`, `body.r`, `body.len`, `splash`, `spread`, `muzzleOffset` are world px.
@@ -1063,10 +1082,10 @@ A mod may carry maps: files the game's Scenario Editor exports (`.steel-tide-map
 
 ## The vanilla roster (ids you may `extends`, name in `producedBy`/`builtBy`/`requires`/`upgradeOf`, or borrow art from)
 
-- ground units: engineer (T1, 150), buggy (T1, 60), ltank (T1, 120), mbt (T2, 280), htank (T3, 900), td (T2, 320), flak (T1, 170), sam (T2, 400), arty (T2, 420), mlrs (T3, 760), radarcar (T3, 480), salamander (T3, 800), bulwark (T3, 650), sentinel (T3, 600), drake (T2, 400), hercules (T2, 350), scorpion (T3, 1100)
+- ground units: engineer (T1, 150), buggy (T1, 60), ltank (T1, 120), mbt (T2, 280), htank (T3, 900), td (T2, 320), flak (T1, 170), sam (T2, 400), arty (T2, 420), mlrs (T3, 760), radarcar (T3, 480), salamander (T3, 800), bulwark (T3, 700), sentinel (T3, 600), drake (T2, 400), hercules (T2, 350), scorpion (T3, 1100)
 - ships: gunboat (T1, 130), mboat (T1, 280), frigate (T2, 700), destroyer (T2, 700), sub (T2, 480), btlship (T3, 1700), carrier (T3, 2200), seatrans (T1, 220), engboat (T1, 200), replship (T2, 600), kraken (T3, 1000), moray (T3, 700)
 - amphibious units: gator (T2, 200)
-- aircraft: hornet (T2, 120), drone (T1, 40), fighter (T2, 380), heli (T2, 380), jet (T2, 450), mjet (T2, 520), bomber (T2, 1000), theli (T1, 280), c47 (T2, 650), gunship (T3, 1800), wraith (T3, 1400), cormorant (T3, 700)
+- aircraft: hornet (T2, 120), drone (T1, 70), fighter (T2, 380), heli (T2, 380), jet (T2, 450), mjet (T2, 520), bomber (T2, 1000), theli (T1, 280), c47 (T2, 650), gunship (T3, 1800), wraith (T3, 1400), cormorant (T2, 700), airforceone (T3, 3000)
 - buildings: hq (T1, 2500), hq2 (T2, 17500, upgrade level), extractor (T1, 120), extractor2 (T2, 310, upgrade level), extractor3 (T3, 810, upgrade level), platform (T1, 120), platform2 (T2, 310, upgrade level), platform3 (T3, 810, upgrade level), power (T1, 140), power2 (T2, 400, upgrade level), power3 (T3, 1100, upgrade level), factory (T1, 320), factory2 (T2, 740, upgrade level), factory3 (T3, 1640, upgrade level), airbase (T1, 380), airbase2 (T2, 830, upgrade level), airbase3 (T3, 1780, upgrade level), navyard (T1, 350), navyard2 (T2, 800, upgrade level), navyard3 (T3, 1750, upgrade level), mgturret (T1, 130), gatling (T2, 330, upgrade level), cannonturret (T1, 320), cannonturret2 (T2, 660, upgrade level), flameturret (T1, 450), aaturret (T1, 400), samsite (T2, 1000, upgrade level), interceptor (T2, 450), interceptor2 (T3, 1100, upgrade level), sandbag (T1, 40), landmine (T1, 60), watermine (T1, 60), repairtower (T1, 360), radar (T2, 400), warlab (T1, 500), veil (T2, 600), reactor (T3, 1400), nukesilo (T3, 1800)
 
 ## Test
