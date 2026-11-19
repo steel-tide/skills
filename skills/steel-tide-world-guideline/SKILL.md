@@ -192,11 +192,12 @@ A `defId` is one of the game's own below, or a def of a unit pack in `mods`. A w
 | `airbase` | building | Airbase |
 | `airbase2` | building | Advanced Airbase |
 | `airbase3` | building | Strategic Airbase |
+| `airforceone` | unit | Air Force One |
 | `arty` | unit | Thunder Howitzer |
 | `bomber` | unit | Vulture Bomber |
 | `btlship` | unit | Sovereign Battleship |
 | `buggy` | unit | Recon Buggy |
-| `bulwark` | unit | Bulwark Mobile Interrupter |
+| `bulwark` | unit | Bulwark C-RAM |
 | `c47` | unit | Condor Cargo Plane |
 | `cannonturret` | building | Cannon Turret |
 | `cannonturret2` | building | Bastion Cannon |
@@ -214,7 +215,7 @@ A `defId` is one of the game's own below, or a def of a unit pack in `mods`. A w
 | `factory2` | building | Advanced War Factory |
 | `factory3` | building | Arsenal |
 | `fighter` | unit | Falcon Fighter |
-| `flak` | unit | Flak Track |
+| `flak` | unit | Humvee AA Vehicle |
 | `flameturret` | building | Flame Thrower |
 | `frigate` | unit | Aegis Frigate |
 | `gatling` | building | Gatling Turret |
@@ -227,6 +228,7 @@ A `defId` is one of the game's own below, or a def of a unit pack in `mods`. A w
 | `hq` | building | Headquarters |
 | `hq2` | building | Headquarters Lv.2 |
 | `htank` | unit | Mammoth Heavy Tank |
+| `intelship` | unit | Sirius Intelligence Ship |
 | `interceptor` | building | Missile Interrupter |
 | `interceptor2` | building | Strategic Interrupter |
 | `jet` | unit | Thunderbolt Strike Jet |
@@ -255,7 +257,7 @@ A `defId` is one of the game's own below, or a def of a unit pack in `mods`. A w
 | `repairtower` | building | Repair Tower |
 | `replship` | unit | Tide Replenishment Ship |
 | `salamander` | unit | Salamander Thermobaric Mortar |
-| `sam` | unit | Hawk SAM Launcher |
+| `sam` | unit | Carapace Air Defence Vehicle |
 | `samsite` | building | SAM Site |
 | `sandbag` | building | Barrier |
 | `scorpion` | unit | Scorpion Ballistic Missile Launcher |

@@ -100,6 +100,11 @@ Own art, a defended building, and a fourth level for a vanilla building line:
     "A hover tank, a bunker and a fusion plant.",
     "一辆悬浮坦克、一座碉堡和一座聚变电站。"
   ],
+  "tags": [
+    "expansion",
+    "sci-fi",
+    "defence"
+  ],
   "license": "CC-BY-4.0",
   "defs": [
     {
@@ -240,6 +245,7 @@ Unknown ordinary fields produce a warning. Each extension package defines and va
 | `hideFromListing` | boolean |  | false | hide from website and in-game discovery lists; the direct mod page and Add to Game remain available |
 | `author` | string |  |  | who made it |
 | `description` | text |  |  | one or two sentences for the list |
+| `tags` | tag[] |  |  | up to 8 words a player finds the mod by in the registry's list: its kind, theme and focus (see Tags) |
 | `homepage` | string |  |  | a link: a repository, a thread |
 | `license` | string |  | CC-BY-4.0 | the mod's licence (SPDX id) |
 | `minGame` | string |  |  | the oldest game version it is written for |
@@ -502,6 +508,7 @@ A prop draws with the sheet `d.<id>` in `sprites`, and its variants with `d.<id>
 | `stealth` | number 0–64 | units only |  | seen only within this many tiles of an enemy |
 | `detect` | number 0–64 |  |  | reveals stealth within this many tiles |
 | `radar` | boolean |  |  | sees by radio: the sight circle ignores weather and the hour, and drops to 7 tiles when short of power |
+| `listen` | number 0–64 |  |  | signals intercept: plots hostile fire and working radars within this many tiles for a few seconds; silent when short of power |
 | `remoteVision` | boolean | units only |  | remote camera feed: hostile jamming blocks its sight within the field |
 | `jamRange` | number 0–64 | buildings only |  | electronic-warfare radius in tiles; requires full power, reveals its location, blocks hostile radar and remote vision, never visual sight or sonar |
 | `hovers` | boolean | units only |  | an aircraft that hovers instead of orbiting; how it flies, not how it looks (`rotors`) |
@@ -1062,6 +1069,39 @@ Nothing else: no links (`homepage` is the mod's link), pictures (`screenshots` a
 node --input-type=module -e "import { parseListing } from './steel-tide-mod.mjs'; import { readFileSync } from 'node:fs'; const r = parseListing(readFileSync(process.argv[1], 'utf8')); console.log(r.issues.length ? r.issues.map(i => 'line ' + i.line + ': ' + i.message).join('\n') : 'ok'); process.exit(r.issues.length ? 1 : 0);" my-mod/LISTING.md
 ```
 
+## Tags
+
+`tags` names up to 8 words from a fixed vocabulary, which the registry's list at https://steelti.de/mods is filtered by, a box for each word, and which the mod's page and its plate in the game show. Tag the mod as a player looking for a mod like it would tick the boxes: its kind, its theme and what the fighting is about, as many of each as are plainly true. A word that does not hold is worse than none: the player who ticks it finds the mod and leaves. A word the game does not know is dropped with a warning (a newer game's vocabulary may have it), and the registry refuses one.
+
+| group | tag | meaning |
+| --- | --- | --- |
+| kind | `expansion` | units and buildings that join the game's own side, on its build lists |
+| kind | `faction` | a side of its own to play beside the game's: its headquarters, builders and roster |
+| kind | `overhaul` | a world of its own: several sides and their rosters, played in place of the game's |
+| kind | `gameplay` | rules of its own: a resource, a system, a way to play |
+| kind | `cosmetic` | looks and sound only: art, terrain, props, music, the menu's backdrop |
+| kind | `utility` | a help to play with rather than something to fight with: planning, tools, quality of life |
+| theme | `historical` | before the world wars: antiquity, the middle ages, the age of sail and of gunpowder |
+| theme | `world-wars` | the First and the Second World War |
+| theme | `cold-war` | the Cold War, and the wars it might have been |
+| theme | `modern` | today's armies and their equipment, real or invented |
+| theme | `sci-fi` | the wars of the future: walkers, lasers, shields |
+| theme | `space` | off the Earth: other planets, orbit, star fleets |
+| theme | `fantasy` | magic, myth and legend |
+| theme | `post-apocalyptic` | after the fall: wasteland, scavengers and ruins |
+| theme | `monsters` | creatures in the fight: the undead, titans, aliens, giant beasts |
+| focus | `land` | tanks, artillery and the war on the ground |
+| focus | `naval` | fleets: warships, submarines and carriers |
+| focus | `air` | aircraft and the war in the sky |
+| focus | `infantry` | soldiers on foot |
+| focus | `superweapons` | giants and weapons that decide a match |
+| focus | `defence` | walls, turrets and fortresses |
+| focus | `economy` | mines, power, production and supply |
+
+```json
+"tags": ["faction", "sci-fi", "land"]
+```
+
 ## Units of measure
 
 - A tile is 32 world pixels. `speed` and projectile `speed` are world px/s; `range`, `minRange`, `vision`, `sonar`, `stealth`, `detect`, `repairRange`, `repairAirRange`, `repairNavalRange` and `interceptRange` are tiles; `radius`, `body.r`, `body.len`, `splash`, `spread`, `muzzleOffset` are world px.
@@ -1083,7 +1123,7 @@ node --input-type=module -e "import { parseListing } from './steel-tide-mod.mjs'
 ## The vanilla roster (ids you may `extends`, name in `producedBy`/`builtBy`/`requires`/`upgradeOf`, or borrow art from)
 
 - ground units: engineer (T1, 150), buggy (T1, 60), ltank (T1, 120), mbt (T2, 280), htank (T3, 900), td (T2, 320), flak (T1, 170), sam (T2, 400), arty (T2, 420), mlrs (T3, 760), radarcar (T3, 480), salamander (T3, 800), bulwark (T3, 700), sentinel (T3, 600), drake (T2, 400), hercules (T2, 350), scorpion (T3, 1100)
-- ships: gunboat (T1, 130), mboat (T1, 280), frigate (T2, 700), destroyer (T2, 700), sub (T2, 480), btlship (T3, 1700), carrier (T3, 2200), seatrans (T1, 220), engboat (T1, 200), replship (T2, 600), kraken (T3, 1000), moray (T3, 700)
+- ships: gunboat (T1, 130), mboat (T1, 280), frigate (T2, 700), destroyer (T2, 700), sub (T2, 480), btlship (T3, 1700), carrier (T3, 2200), seatrans (T1, 220), engboat (T1, 200), replship (T2, 600), intelship (T2, 500), kraken (T3, 1000), moray (T3, 700)
 - amphibious units: gator (T2, 200)
 - aircraft: hornet (T2, 120), drone (T1, 70), fighter (T2, 380), heli (T2, 380), jet (T2, 450), mjet (T2, 520), bomber (T2, 1000), theli (T1, 280), c47 (T2, 650), gunship (T3, 1800), wraith (T3, 1400), cormorant (T2, 700), airforceone (T3, 3000)
 - buildings: hq (T1, 2500), hq2 (T2, 17500, upgrade level), extractor (T1, 120), extractor2 (T2, 310, upgrade level), extractor3 (T3, 810, upgrade level), platform (T1, 120), platform2 (T2, 310, upgrade level), platform3 (T3, 810, upgrade level), power (T1, 140), power2 (T2, 400, upgrade level), power3 (T3, 1100, upgrade level), factory (T1, 320), factory2 (T2, 740, upgrade level), factory3 (T3, 1640, upgrade level), airbase (T1, 380), airbase2 (T2, 830, upgrade level), airbase3 (T3, 1780, upgrade level), navyard (T1, 350), navyard2 (T2, 800, upgrade level), navyard3 (T3, 1750, upgrade level), mgturret (T1, 130), gatling (T2, 330, upgrade level), cannonturret (T1, 320), cannonturret2 (T2, 660, upgrade level), flameturret (T1, 450), aaturret (T1, 400), samsite (T2, 1000, upgrade level), interceptor (T2, 450), interceptor2 (T3, 1100, upgrade level), sandbag (T1, 40), landmine (T1, 60), watermine (T1, 60), repairtower (T1, 360), radar (T2, 400), warlab (T1, 500), veil (T2, 600), reactor (T3, 1400), nukesilo (T3, 1800)
