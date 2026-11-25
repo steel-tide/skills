@@ -32,9 +32,10 @@ the Missile Interrupter never does.
 ## Your own
 
 - **The silo line is yours to open**: research `nuclearProgram` (its column
-  first), set a reserve, lay the reactor and the silo (`steel build nukesilo
-  --near <x,y>`; it needs the radar and the reactor standing), then `steel
-  nuke queue <silo>` and `steel nuke targets` when it is ready. Only an
+  first), lay the reactor and the silo (`steel build nukesilo --near <x,y>
+  -w`; it needs the radar and the reactor standing), then `steel nuke queue
+  <silo> -w`, which saves the 2,500 ahead of the factories and starts it the
+  moment it is there, and `steel nuke targets` when it is ready. Only an
   income that can keep an army standing beside it affords one.
   Guard the silo with AA; a single bomber can kill an unguarded one.
 - `steel nuke targets` lists the best points to aim at: seldom a building's

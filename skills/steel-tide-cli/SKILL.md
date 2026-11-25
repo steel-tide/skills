@@ -31,9 +31,9 @@ for you between turns:
   Guns put on the weakest thing in reach. An **assault**: a group marched to a
   place as one body, fighting what it meets together, holding the place, and
   falling back by itself when it has lost half its worth.
-- **Standing production** (`steel produce … --repeat`): a unit kept on a
-  factory's queue for the rest of the match, refilled as each comes out,
-  never spending under the reserve you set for buildings.
+- **Standing production** (`steel produce … --repeat`): a factory kept
+  turning out a unit for the rest of the match, one at a time, never
+  spending under the reserve you set for buildings.
 - **Rally into a group** (`steel rally … --join army`): every unit a factory
   turns out joins the group, so the tactics on the group take it up at once.
 - **Scripts** (`steel script`): your own code, run against what your seat sees
@@ -123,7 +123,8 @@ the server; nothing on your side fixes it.
    answer to are the four things to check every turn.
 3. **Order.** A hand order does one thing now (`build`, `produce`, `move`,
    `attack`, `research`, `upgrade`). A standing order keeps doing it:
-   `produce --repeat`, `rally --join`, `tactic`. Prefer standing orders: a
+   `produce --repeat`, `rally --join`, `tactic`, and `--when-affordable` on
+   what the metal is not there for yet. Prefer standing orders: a
    decision that holds between your turns is worth ten that do not.
 4. **Wait.** `steel wait 45` lets the match run (game seconds) and returns the
    moment something that cannot wait happens: the base under fire, a loss, a
@@ -165,14 +166,22 @@ units where they stand.
   launchers, aircraft under SAM.
 - `steel tactic focus army` — the guns go on the weakest thing in reach.
 - `steel tactic assault army --to 60,50` — **the attack.** The group marches
-  there as one body on a route round the turrets you know of; a unit that
-  runs more than 6 tiles ahead waits for the rest (`--spread`); what the body
-  meets it closes on together; at the place it holds like a guard until you
-  stop it or send a new assault; and when it has lost half the most it was
-  worth (`--below 50`) it falls back to where it set out and tells you
+  there as one body on a route round the turrets you know of. The reply says
+  the route: its length against the straight line, the legs, the guns it keeps
+  clear of and the ones it passes under. It does not go round the guns at the
+  place itself (it goes to fight them), and if the way round is more than half
+  again the short way it takes the short way and says so. A unit more than
+  `--spread` (6, more in a big body) ahead of the body's middle waits; what
+  the body meets it closes on together; at the place it holds like a guard
+  until you stop it or send a new assault; and when it has lost half the most
+  it was worth (`--below 50`) it falls back to where it set out and tells you
   (`assault3: beaten at 29,36: 6 units worth 720 left of 1680; falling back to
-  19,17`). Setting out, reaching and falling back are `contact` lines, which
-  wake `steel wait`.
+  19,17`). The middle is where most of the body stands. `steel tactic` names
+  the units coming up from behind; a slow one on the move is waited for. A
+  unit that stands still off the body for 25 s is left behind, with a line
+  saying so: it is walled in or cut off, and no order reaches it. A unit the
+  retreat sent home comes back up once mended. Setting out, reaching, leaving
+  units behind and falling back are `contact` lines, which wake `steel wait`.
 
 Rules on one unit run in an order — retreat, kite, assault, guard; focus only
 picks targets — so `tactic retreat army`, `tactic kite army --def arty` and
@@ -182,18 +191,66 @@ home, the batteries keep their distance, the body marches.
 ### Production that keeps going
 
 ```bash
-steel produce factory mbt -n 2 --repeat     # two mbt on this factory's queue at all times, for the rest of the match
-steel produce factory flak -n 1 --repeat    # and a flak beside them
+steel produce factory mbt -n 2 --repeat     # this factory turns out mbt for the rest of the match
+steel produce factory flak --repeat         # and flak: the two take turns, two mbt to each flak (-n is the share)
 steel produce reserve 500                   # refills never spend the last 500: that is for your buildings and research
-steel produce                               # the standing orders, and what holds each back (metal, a queue full)
+steel produce                               # the standing orders, and what holds each back (metal, the unit in work)
 steel produce stop [factory]                # end them (all, or one factory's)
+steel produce hq engineer -n 2 -w           # a one-off bought when it can be paid, ahead of the standing orders
 ```
 
 A factory with an empty queue is the most common way an agent loses: it looks
 every thirty seconds and the queue ran dry in ten. Set the standing orders at
-the whistle and change them when `steel enemies` changes (`counters.md`). When
-a building you want is refused for metal, raise the reserve until it is laid,
-then lower it.
+the whistle and change them when `steel enemies` changes (`counters.md`).
+
+The session keeps one unit in work at each factory and queues the next in
+its last seconds, so the factory never stands. **Every unit on a queue holds
+its price as committed metal**, and an order by hand needs the metal that is
+not committed. A queue stacked with the mix held all of it: agents with 1,500
+on hand had every building refused. So never stack a queue by hand
+for throughput. A second factory is throughput; a deep queue is only
+committed metal. A refusal for metal and the brief's economy line say what
+the committed metal is promised to (`1019 committed to factory#139 queue (mbt)
+280, 2 sites going up 245`). With `-n` and no `--repeat`, what the metal
+covers is queued and the reply says how many that was.
+
+### Buying when the metal is there: the spend list
+
+```bash
+steel upgrade extractor --when-affordable   # every extractor raised a level whenever it can be paid, for the rest of the match
+steel build warlab --near @hq -w            # one building, placed the moment it can be paid (-w is --when-affordable)
+steel research deepDrilling -w              # one tech node, queued the moment it can be paid
+steel nuke queue silo -w                    # a warhead, started the moment its 2,500 is there
+steel spend                                 # the list, top first: what each entry buys and what it waits for
+steel spend first 3                         # entry 3 is bought before the rest
+steel spend stop 3 | steel spend stop --all # end entries
+```
+
+Never ask the same `build`, `upgrade`, `research`, `produce` or `nuke queue`
+again each turn until the metal is there, and never juggle `produce reserve` to
+save for something: add `--when-affordable` and the session orders it the second it
+can be paid. A refusal for metal says so itself. The list is read from the top
+once a second, one purchase at most:
+
+- An entry short of nothing but metal is **saving**, and the entries after it
+  wait. Order the list by what matters most (`spend first <n>`).
+- An entry something else holds back is **held** and passed over until that
+  clears: tech not met, no spot, no engineer. `steel spend` says which.
+- **A single purchase goes ahead of the factories.** A building, a tech node,
+  buildings named by id (`steel upgrade 21,22 -w`), units or a warhead: standing production
+  leaves its price alone, so a queue cannot starve it. Put nothing dear on the
+  list that you would not slow the factories for. A building stays listed
+  until its site stands, and is ordered again if its engineer never gets there.
+- **A standing upgrade goes behind them.** `steel upgrade <name> -w` stays for
+  the match: every building of that line you have or get, the cheapest step
+  first, up to the top level (`upgrade extractor -w` ends with every extractor
+  a Deep-Core; `--def extractor` stops at the first level). It stands back
+  while a factory with standing production stands idle, and buys while they
+  are at work, so it never leaves you without an army in a rush. If it never
+  gets a turn your income does not carry both: stop a standing order, or name
+  the extractors by id. It also waits while power is short: an upgrade draws more,
+  so keep `steel build power --near @hq -w` ahead of it.
+- `steel brief` carries the list on its `spend` line.
 
 ### Groups, rally, routes
 
@@ -208,10 +265,16 @@ then lower it.
   themselves. Never carry ids in a script.
 - A bare word that names no group but a kind selects every unit or building
   of that kind: `move ltank 40,20`, `rally factory 22,16`, `upgrade extractor`.
+  A building's name is its line at any level: `factory` still means it once it
+  is a `factory2`, so `produce factory mbt` and `rally factory` keep working
+  after an upgrade (two of the line: name the id). `--def factory` is the
+  plain ones alone.
 - `steel path <from> <to> [--air|--sea]` finds a way round every enemy gun you
   know of and says what it keeps clear of and what it has to pass under. `steel
   move <units> <x,y> --safe` sends them along it. This is how a raid reaches
-  the extractors behind a turret wall, and how a lift skirts the SAM sites.
+  the extractors behind a turret wall, and how a lift skirts the SAM sites. An
+  enemy unit counts only if seen in the last 10 seconds, and only as a step
+  aside: it has moved on by the time the route is walked.
 
 ## Orders by hand
 
@@ -222,7 +285,11 @@ has every option.
 
 - **Units:** `steel move <units> <x,y> [--attack]`, `steel attack <units>
   <target>`, `hold`, `stop`, `route` (a standing patrol), `board`, `pickup`,
-  `unload`, `repair`, `assist`, `ability`, `hold-fire`.
+  `unload`, `repair`, `assist`, `ability`, `hold-fire`. An enemy building you
+  know of but do not see now cannot be shot at by id: `steel attack <units>
+  <id>` then sends the units to where it stood on an attack-move and says so,
+  and `@<id>` is that place (`move raid @57`). Artillery that must shell it
+  from range takes the tile: `steel attack <units> x,y`.
 - **Hold fire:** `steel hold-fire <units>` stops their automatic fire and
   pursuit while they keep moving and working: slip past a turret line, set an
   ambush, keep a scout unseen. `--off`, or any attack order, releases it;
@@ -235,11 +302,15 @@ has every option.
   extractor, `--by <engineers>` to choose who; the nearest idle engineer
   otherwise), `steel upgrade <ids|kind>`, `steel sell <ids>`. A blueprint is
   raised by the engineer you sent; idle engineers help nearby sites by
-  themselves.
+  themselves. `--near` finds the nearest spot the engineer can reach that
+  leaves a way round your buildings and off the ground your factories' units
+  form up on; read the `note:` under the order when it says the spot is far
+  or may close a gap. `upgrade` starts every one the metal covers, the cheapest
+  first, and says which it left; any of the three takes `--when-affordable`.
 - **Production and research:** `steel produce <factory> <unit> [-n N]` for a
   one-off, `steel research <node>` (`steel tech` shows what the lab can take).
 - **Warheads:** `steel nuke targets` (the best points to aim at, with what each
-  destroys and the chance it arrives), `steel nuke queue <silo>`, `steel nuke
+  destroys and the chance it arrives), `steel nuke queue <silo> [-w]`, `steel nuke
   launch <silo> x,y`.
 - **Unit actions a mod adds:** `steel show <id>` lists them; `steel
   content-action <units> <module> <action> [--choice id] [--target id] [--at
@@ -335,7 +406,11 @@ falls back to an older autopilot of the CLI's own: `steel help keep`, `mix` and
   words).
 - Keep going until `steel status` shows phase `ended` or you are eliminated. Then
   `steel disconnect` and report the result, how the match turned, and what you
-  would change.
+  would change. `steel wait` on a match that is over answers at once with the
+  result, so a loop on it ends there.
+- `steel chat <text>` talks to everyone, `--team` to your side. A line carries
+  240 characters: a longer one is sent up to the last whole word that fits and
+  the reply quotes what did not go, to send as the next line.
 - Under a time limit, the faction still standing with the most unspent metal
   wins at the deadline, and equal balances across teams are a draw. In the last
   minutes bank instead of spending: `steel produce stop`, and `steel auto
@@ -352,9 +427,10 @@ steel threats                                         # every enemy group in sig
 steel enemies | steel deposits | steel map | steel tech   # drill in
 steel defs <unit>                                     # a unit's stats and counters
 steel build <building> --near <x,y> | --deposit <id>  # lay a building
-steel produce <factory> <unit> -n 2 --repeat | steel produce reserve <metal> | steel produce | steel produce stop
+steel produce <factory> <unit> [-n share] --repeat | steel produce reserve <metal> | steel produce | steel produce stop
 steel rally <factory> <x,y> --join <group>            # new units gather there and join the group
-steel research <node> | steel upgrade <ids|kind>
+steel research <node> | steel upgrade <ids|kind>      # these, build, produce and nuke queue take --when-affordable (-w): bought when it can be paid
+steel spend | steel spend first <n> | steel spend stop <n>|--all   # the spend list: what waits for metal, top first
 steel move <units> <x,y> [--attack] [--safe] | steel attack <units> <target>
 steel group <name> <units> | move <name> <x,y>        # name a group; order it by name
 steel tactic guard | retreat --all --below 35 | kite <units> | focus <units> | assault <group> --to x,y   # standing rules; tactic stop <id>|--all

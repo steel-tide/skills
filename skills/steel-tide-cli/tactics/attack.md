@@ -15,6 +15,16 @@
   enemies`), and `steel priority <id>` on that building makes every gun that
   reaches it fire on it first. An assault that reaches its place holds it;
   send the next from there.
+- **Read the route on the reply.** The assault says its length against the
+  straight line and the guns it keeps clear of. It goes straight at the guns
+  at the place, and takes the short way past a long wall of them. If a way
+  round is what you want, send the body to a tile beside the wall first.
+- **Keep the assault on, and do not hand-march a big army.** A plain `move`
+  or a chain of `move --attack --queue` strings thirty units out single file,
+  and they arrive one at a time. Two agents lost armies of 35 and 22 this
+  way. The assault keeps the body together, so watch `steel tactic`
+  instead: it names the units coming up from behind, and a unit left
+  behind (walled in, cut off) has a contact line of its own.
 - **Production first, then the HQ.** Kill factories, yards and airbases before
   anything else: a faction without production cannot replace what it loses. Then
   the HQ, which usually ends it.

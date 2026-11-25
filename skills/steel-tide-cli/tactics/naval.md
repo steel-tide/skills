@@ -12,7 +12,7 @@ ground units landed by transport (`steel pickup`, `steel unload`).
   <boat id>`.
 - **Turn the factory down.** Ground units at home are a garrison: one tank
   on the factory's standing order, and the rest of the metal into ships and
-  aircraft (`steel produce navyyard destroyer -n 2 --repeat`).
+  aircraft (`steel produce navyyard destroyer --repeat`).
 - **The T2 yard is the real fleet.** Destroyers (torpedoes, 1,300 hp) and
   Frigates (a SAM) are what hold the water; T1 gunboats die one by one to them.
 - **A second yard away from the enemy's side of the coast.** A missile sub

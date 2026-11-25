@@ -13,7 +13,7 @@
   arrives, what it has under its guns, and whether what you have in reach
   holds or is outgunned. Outgunned: pull the exposed units back behind the
   turrets (`steel move <units> @hq`), put the counter on the standing orders
-  (`steel produce factory <unit> -n 2 --repeat`), and let the turrets and HQ
+  (`steel produce factory <unit> --repeat`), and let the turrets and HQ
   take the first blow. Holds: let the guard fight, and add `steel tactic focus
   --all` so the shots land on one thing at a time.
 - **Fire from the fog.** A loss line ending `— out of sight` is artillery

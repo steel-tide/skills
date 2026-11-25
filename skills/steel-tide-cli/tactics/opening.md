@@ -32,7 +32,7 @@ three quarters of its price):
 | By    | Lay                                                                                                   |
 | ----- | ----------------------------------------------------------------------------------------------------- |
 | 1:30  | a power plant (`power 9/20` in the economy line means the base is starved: everything slows)          |
-| 2:30  | a factory; `steel rally factory <x,y> --join army` beside it, and `steel produce factory ltank -n 2 --repeat` |
+| 2:30  | a factory; `steel rally factory <x,y> --join army` beside it, and `steel produce factory ltank --repeat` |
 | 3:30  | a second power plant; `steel produce reserve 500` so the standing tanks leave money for buildings     |
 | 4:30  | the War Lab (`warlab`), then `steel research <doctrine>` at once: hammer, anvil or lightning           |
 | 5:30  | a cannon turret on the approach the enemy will come by; the factory upgraded (`steel upgrade factory`)  |
